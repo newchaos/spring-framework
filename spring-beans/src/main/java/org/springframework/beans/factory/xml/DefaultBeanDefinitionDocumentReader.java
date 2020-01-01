@@ -92,9 +92,12 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	 */
 	@Override
 	public void registerBeanDefinitions(Document doc, XmlReaderContext readerContext) {
+		// 下面创建解析xml的delegate需要使用到这个文件;
 		this.readerContext = readerContext;
 		logger.debug("Loading bean definitions");
+		// 通过默认的文档读取器DocumentReader获取到文档的root的dom节点;
 		Element root = doc.getDocumentElement();
+		// 拿到root节点之后正式解析xml文件,之前都是在做准备和校验工作;
 		doRegisterBeanDefinitions(root);
 	}
 
@@ -126,12 +129,17 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 		// the new (child) delegate with a reference to the parent for fallback purposes,
 		// then ultimately reset this.delegate back to its original (parent) reference.
 		// this behavior emulates a stack of delegates without actually necessitating one.
+
+		// 真正的解析还是交给了delegete实现;
+		// 重新创建delegete;使用之前给的readercontext；
 		BeanDefinitionParserDelegate parent = this.delegate;
 		this.delegate = createDelegate(getReaderContext(), root, parent);
 
 		if (this.delegate.isDefaultNamespace(root)) {
+			// 处理profile的配置文件问题;看要解析哪个环境的配置;
 			String profileSpec = root.getAttribute(PROFILE_ATTRIBUTE);
 			if (StringUtils.hasText(profileSpec)) {
+				// profile环境可以同时指定多个;
 				String[] specifiedProfiles = StringUtils.tokenizeToStringArray(
 						profileSpec, BeanDefinitionParserDelegate.MULTI_VALUE_ATTRIBUTE_DELIMITERS);
 				if (!getReaderContext().getEnvironment().acceptsProfiles(specifiedProfiles)) {
@@ -144,6 +152,8 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 			}
 		}
 
+		// DefaultBeanDefinitionDocumentReader采用面向继承设计;因为没有使用final修饰;
+		// 下面两个方法是为子类而设计的,即模板方法设计模式的原理;
 		preProcessXml(root);
 		parseBeanDefinitions(root, this.delegate);
 		postProcessXml(root);
@@ -171,16 +181,20 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 				Node node = nl.item(i);
 				if (node instanceof Element) {
 					Element ele = (Element) node;
+					// 是否默认的bean的xsd约束文件;
 					if (delegate.isDefaultNamespace(ele)) {
+						// 默认bean标签解析;
 						parseDefaultElement(ele, delegate);
 					}
 					else {
+						// 自定义bean标签解析;
 						delegate.parseCustomElement(ele);
 					}
 				}
 			}
 		}
 		else {
+			// 自定义bean标签解析;
 			delegate.parseCustomElement(root);
 		}
 	}

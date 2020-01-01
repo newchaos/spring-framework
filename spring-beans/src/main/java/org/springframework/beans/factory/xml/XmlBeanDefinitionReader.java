@@ -79,53 +79,74 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 
 	/**
 	 * Indicates that the validation should be disabled.
+	 * 文件的校验模式如果为none则不进行文件的校验
 	 */
 	public static final int VALIDATION_NONE = XmlValidationModeDetector.VALIDATION_NONE;
 
 	/**
 	 * Indicates that the validation mode should be detected automatically.
+	 * 校验模式启动  默认模式
 	 */
 	public static final int VALIDATION_AUTO = XmlValidationModeDetector.VALIDATION_AUTO;
 
 	/**
 	 * Indicates that DTD validation should be used.
+	 * dtd模式下校验
 	 */
 	public static final int VALIDATION_DTD = XmlValidationModeDetector.VALIDATION_DTD;
 
 	/**
 	 * Indicates that XSD validation should be used.
+	 * xsd模式下校验
 	 */
 	public static final int VALIDATION_XSD = XmlValidationModeDetector.VALIDATION_XSD;
 
 
 	/** Constants instance for this class */
+	// 储存公开常量的一个类  以key value形式储存Constants  缓存中。
 	private static final Constants constants = new Constants(XmlBeanDefinitionReader.class);
 
+	//默认验证模式为自动
 	private int validationMode = VALIDATION_AUTO;
 
+	//命名空间  用做配置sax 有用到
 	private boolean namespaceAware = false;
 
 	private Class<? extends BeanDefinitionDocumentReader> documentReaderClass =
 			DefaultBeanDefinitionDocumentReader.class;
 
+	// 抛异常的工具  和错误日志打印
 	private ProblemReporter problemReporter = new FailFastProblemReporter();
 
+	//实例无实现	可自行配置
 	private ReaderEventListener eventListener = new EmptyReaderEventListener();
 
+	//实例无实现  可自行配置
 	private SourceExtractor sourceExtractor = new NullSourceExtractor();
 
+
+	// 命名空间处理解析器     处理命名空间的所有META-INF 中springhandlers  储存了一系列的处理器和命名空间
+	//都有相对应的处理器
 	@Nullable
 	private NamespaceHandlerResolver namespaceHandlerResolver;
 
+	//用于sax 工厂创建  在构建文档
 	private DocumentLoader documentLoader = new DefaultDocumentLoader();
 
+	//实体解析器systemId  获取到指定的systemId  publicId  获取约束路径加载一份进行做约束校验
 	@Nullable
 	private EntityResolver entityResolver;
 
+	//错误处理  日志提示  装配给sax
 	private ErrorHandler errorHandler = new SimpleSaxErrorHandler(logger);
 
+	//  可判断该文件为dtd  还是schema 约束。
 	private final XmlValidationModeDetector validationModeDetector = new XmlValidationModeDetector();
 
+	/**
+	 *	线程数据存储空间  防止循环重复加载一个文件 。
+	 *	如果<import resource=""  > 导入的资源和本资源一致   则会无限循环加载。
+	 */
 	private final ThreadLocal<Set<EncodedResource>> resourcesCurrentlyBeingLoaded =
 			new NamedThreadLocal<>("XML bean definition resources currently being loaded");
 
@@ -134,6 +155,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * Create new XmlBeanDefinitionReader for the given bean factory.
 	 * @param registry the BeanFactory to load bean definitions into,
 	 * in the form of a BeanDefinitionRegistry
+	 *   构造 bean的实例容器
 	 */
 	public XmlBeanDefinitionReader(BeanDefinitionRegistry registry) {
 		super(registry);
@@ -255,6 +277,14 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	/**
 	 * Return the EntityResolver to use, building a default resolver
 	 * if none specified.
+	 *
+	 * 提供一个如何寻找dtd或者xsd声明的方法,即由程序来实现寻找dtd声明的过程,比如我们将dtd文件放到项目中某处；
+	 * 在实现时直接将此文档返回,避免通过网络来寻找相应的声明;
+	 * 默认是通过网络来请求,但是会比较慢，所以这里采取了手动从本地获取;
+	 * 直接在sax在解析时传入此resolverentity即可;
+	 * publicid
+	 * systemid;
+	 *
 	 */
 	protected EntityResolver getEntityResolver() {
 		if (this.entityResolver == null) {
@@ -298,9 +328,11 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * @param resource the resource descriptor for the XML file
 	 * @return the number of bean definitions found
 	 * @throws BeanDefinitionStoreException in case of loading or parsing errors
+	 * 加载一个资源 包装成EncodedResource  会根据编码进行解析
 	 */
 	@Override
 	public int loadBeanDefinitions(Resource resource) throws BeanDefinitionStoreException {
+		//指定编码 的解析;
 		return loadBeanDefinitions(new EncodedResource(resource));
 	}
 
@@ -310,6 +342,9 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * allowing to specify an encoding to use for parsing the file
 	 * @return the number of bean definitions found
 	 * @throws BeanDefinitionStoreException in case of loading or parsing errors
+	 *
+	 * 	*	1--将资源放入resourcesCurrentlyBeingLoaded  当前线程防止循环加载
+	 * 	*	2--将流和资源交给doLoadBeanDefinitions
 	 */
 	public int loadBeanDefinitions(EncodedResource encodedResource) throws BeanDefinitionStoreException {
 		Assert.notNull(encodedResource, "EncodedResource must not be null");
@@ -317,11 +352,13 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 			logger.info("Loading XML bean definitions from " + encodedResource);
 		}
 
+		// 防止配置重复;
 		Set<EncodedResource> currentResources = this.resourcesCurrentlyBeingLoaded.get();
 		if (currentResources == null) {
 			currentResources = new HashSet<>(4);
 			this.resourcesCurrentlyBeingLoaded.set(currentResources);
 		}
+		//  利用set去重的方式,添加有重复的,就抛一个异常出来,让用户自己进行检查;
 		if (!currentResources.add(encodedResource)) {
 			throw new BeanDefinitionStoreException(
 					"Detected cyclic loading of " + encodedResource + " - check your import definitions!");
@@ -329,6 +366,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 		try {
 			InputStream inputStream = encodedResource.getResource().getInputStream();
 			try {
+				// 转换为sax解析dom的工具进行dom解析;
 				InputSource inputSource = new InputSource(inputStream);
 				if (encodedResource.getEncoding() != null) {
 					inputSource.setEncoding(encodedResource.getEncoding());
@@ -384,6 +422,12 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * @throws BeanDefinitionStoreException in case of loading or parsing errors
 	 * @see #doLoadDocument
 	 * @see #registerBeanDefinitions
+	 * spring里面真正开始干活的都是do开头的;前面都是准备工作,感觉好像c/c++都是这么来着的;
+	 * //获取文档进行注册   除去异常就两步操作交给其他方法完成
+	 * 1、在doLoadDocument的getValidationModeForResource方法校验文档的类型;
+	 * 2、加载文档为Document,使用documentloader来加载xml文件;其中使用Java自带的DocumentBuilderFactory解析的(sax的解析xml文件的套路);
+	 * 3、注册bean到spring容器当中;
+	 *
 	 */
 	protected int doLoadBeanDefinitions(InputSource inputSource, Resource resource)
 			throws BeanDefinitionStoreException {
@@ -424,6 +468,10 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * @throws Exception when thrown from the DocumentLoader
 	 * @see #setDocumentLoader
 	 * @see DocumentLoader#loadDocument
+	 *
+	 *
+	 * getEntityResolver() 默认是通过网络来请求,但是会比较慢，所以这里采取了手动从本地获取;
+	 * getValidationModeForResource(resource) 获取应该校验的模式,到底是dtd还是xsd的格式;
 	 */
 	protected Document doLoadDocument(InputSource inputSource, Resource resource) throws Exception {
 		return this.documentLoader.loadDocument(inputSource, getEntityResolver(), this.errorHandler,
@@ -437,6 +485,10 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * <p>Override this method if you would like full control over the validation
 	 * mode, even when something other than {@link #VALIDATION_AUTO} was set.
 	 * @see #detectValidationMode
+	 * 如果设定了验证模式就使用设定的验证模式;（可以通过xmlbeandefinitionreader的setvalidationmode来指定验证模式）;
+	 * 否则就使用自动检测的方式; 自动检测模式指定函数detectValidationMode来实现;
+	 * 而detectValidationMode又委托了专门处理类XmlValidationModeDetector调用其validationModeDetecotor方法实现;
+	 *
 	 */
 	protected int getValidationModeForResource(Resource resource) {
 		int validationModeToUse = getValidationMode();
@@ -496,13 +548,14 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * {@code registerBeanDefinitions} on it.
 	 * @param doc the DOM document
 	 * @param resource the resource descriptor (for context information)
-	 * @return the number of bean definitions found
+	 * @return the number of bean definitions found // 返回注册了多少个bean;
 	 * @throws BeanDefinitionStoreException in case of parsing errors
 	 * @see #loadBeanDefinitions
 	 * @see #setDocumentReaderClass
 	 * @see BeanDefinitionDocumentReader#registerBeanDefinitions
 	 */
 	public int registerBeanDefinitions(Document doc, Resource resource) throws BeanDefinitionStoreException {
+		//创建好documentReader和readContext准备开始解析xml注册到容器;在哪注册呢？
 		BeanDefinitionDocumentReader documentReader = createBeanDefinitionDocumentReader();
 		int countBefore = getRegistry().getBeanDefinitionCount();
 		documentReader.registerBeanDefinitions(doc, createReaderContext(resource));

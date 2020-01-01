@@ -75,6 +75,8 @@ public class XmlBeanFactory extends DefaultListableBeanFactory {
 	 * @throws BeansException in case of loading or parsing errors
 	 */
 	public XmlBeanFactory(Resource resource, BeanFactory parentBeanFactory) throws BeansException {
+		// 主要创建抽象的自动装配的bean工厂，
+		// 在忽略的接口里面把beannameaware，beanfacotroyaware,beanclassloaderaware 系列全部加到ignoredDependencyInterfaces列表下面，不让初始化;
 		super(parentBeanFactory);
 		this.reader.loadBeanDefinitions(resource);
 	}

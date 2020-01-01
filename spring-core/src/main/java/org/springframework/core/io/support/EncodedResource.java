@@ -35,6 +35,7 @@ import org.springframework.util.ObjectUtils;
  * <p>Used as an argument for operations that support reading content with
  * a specific encoding, typically via a {@code java.io.Reader}.
  *
+ * 对Resource进行 编码设置 最终以什么样的编码去解读
  * @author Juergen Hoeller
  * @author Sam Brannen
  * @since 1.2.6
@@ -42,13 +43,17 @@ import org.springframework.util.ObjectUtils;
  * @see java.io.Reader
  * @see java.nio.charset.Charset
  */
+
 public class EncodedResource implements InputStreamSource {
 
+	// 文件资源
 	private final Resource resource;
 
+	// 指定编码字符集
 	@Nullable
 	private final String encoding;
 
+	// 指定编码字符集   类似Class和ClassLoad一样  有优先权
 	@Nullable
 	private final Charset charset;
 
@@ -58,7 +63,9 @@ public class EncodedResource implements InputStreamSource {
 	 * not specifying an explicit encoding or {@code Charset}.
 	 * @param resource the {@code Resource} to hold (never {@code null})
 	 */
+	// 构造   初始化属性
 	public EncodedResource(Resource resource) {
+		// 并没有指定编码和字符集;都设置为了null;
 		this(resource, null, null);
 	}
 
@@ -134,6 +141,7 @@ public class EncodedResource implements InputStreamSource {
 	 * @throws IOException if opening the Reader failed
 	 * @see #requiresReader()
 	 * @see #getInputStream()
+	 * 是否存在指定编码，优先选择charset   返回一个InputStreamReader
 	 */
 	public Reader getReader() throws IOException {
 		if (this.charset != null) {
