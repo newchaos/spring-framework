@@ -187,6 +187,18 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 					// 是否默认的bean的xsd约束文件;
 					if (delegate.isDefaultNamespace(ele)) {
 						// 默认bean标签解析;
+						/**
+						 *  总共处理三部曲:
+						 *  1、解析标签到genericbeandefinition对象；
+						 *  2、注册到beandefinitionmap中; spring中全局的map有几个？
+						 *  			// 注册beandefinition
+						 * 				this.beanDefinitionMap.put(beanName, beanDefinition);
+						 * 				// 记录beanname；
+						 * 				this.beanDefinitionNames.add(beanName);
+						 * 				this.manualSingletonNames.remove(beanName);
+						 * 				this.frozenBeanDefinitionNames = null;
+						 *  3、通知监听事件;有哪些监听事件呢？
+						 */
 						parseDefaultElement(ele, delegate);
 					}
 					else {

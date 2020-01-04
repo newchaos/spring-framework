@@ -558,6 +558,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 		//创建好documentReader和readContext准备开始解析xml注册到容器;在哪注册呢？
 		BeanDefinitionDocumentReader documentReader = createBeanDefinitionDocumentReader();
 		int countBefore = getRegistry().getBeanDefinitionCount();
+		// createReaderContext 方法里面初始化了defaultnamespacehandler,为后面的解析自定义的namespace提供了方便;
 		documentReader.registerBeanDefinitions(doc, createReaderContext(resource));
 		return getRegistry().getBeanDefinitionCount() - countBefore;
 	}
