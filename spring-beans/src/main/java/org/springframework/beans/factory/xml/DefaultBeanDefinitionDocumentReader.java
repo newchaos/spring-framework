@@ -92,7 +92,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	 */
 	@Override
 	public void registerBeanDefinitions(Document doc, XmlReaderContext readerContext) {
-		// 下面创建解析xml的delegate需要使用到这个文件;
+		// 下面创建解析xml的delegater需要使用到这个阅读器的上下文;
 		this.readerContext = readerContext;
 		logger.debug("Loading bean definitions");
 		// 通过默认的文档读取器DocumentReader获取到文档的root的dom节点;
@@ -173,6 +173,9 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	 * Parse the elements at the root level in the document:
 	 * "import", "alias", "bean".
 	 * @param root the DOM root element of the document
+	 *
+	 *  spring里面有两大bean声明,一类是默认的,如<bean id = "test" class = "test.TestBan"></bean>;
+	 *             另一类是<tx:annoation-driven/>;
 	 */
 	protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate delegate) {
 		if (delegate.isDefaultNamespace(root)) {
@@ -188,6 +191,16 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 					}
 					else {
 						// 自定义bean标签解析;
+						/**
+						 * 自定义标签需要加入三个部分:
+						 * 一个继承NameSpaceHandlerSupport的类,用来注册自定义的namespace;
+						 * 一个继承AbstractSingleBeanDefinitionParser的解析标签的类;
+						 * 编写spring.handlers  和  spring.schemas文件，放在工程的/META-INF目录下面;
+						 * 最后一个xsd文件的对象的封装对象数据结构;
+						 * 比较熟悉的自定义标签<tx:annotation-driven></>
+						 * 感觉spring的解析就是首先定义了一套xml解析引擎;
+ 						 */
+
 						delegate.parseCustomElement(ele);
 					}
 				}
@@ -207,6 +220,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 			processAliasRegistration(ele);
 		}
 		else if (delegate.nodeNameEquals(ele, BEAN_ELEMENT)) {
+			// 这4个不同的默认标签中,bean标签是最复杂的;
 			processBeanDefinition(ele, delegate);
 		}
 		else if (delegate.nodeNameEquals(ele, NESTED_BEANS_ELEMENT)) {
@@ -316,8 +330,10 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	 * and registering it with the registry.
 	 */
 	protected void processBeanDefinition(Element ele, BeanDefinitionParserDelegate delegate) {
+		// 先从document中封装beandefinition持有者;bean持有者有bean定义,bean名称,bean别名;
 		BeanDefinitionHolder bdHolder = delegate.parseBeanDefinitionElement(ele);
 		if (bdHolder != null) {
+			// 如果默认的标签下面 有自定义的属性,则再解析自定义属性;
 			bdHolder = delegate.decorateBeanDefinitionIfRequired(ele, bdHolder);
 			try {
 				// Register the final decorated instance.
