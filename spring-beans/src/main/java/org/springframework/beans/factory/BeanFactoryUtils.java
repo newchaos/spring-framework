@@ -69,6 +69,10 @@ public abstract class BeanFactoryUtils {
 	 * @param name the name of the bean
 	 * @return the transformed name
 	 * @see BeanFactory#FACTORY_BEAN_PREFIX
+	 * // 如果是o.s.bean.factory.FactoryBean类型;
+	 * 则把前面的前缀干掉;
+	 * factorybean的存在就是为了把bean的复杂性的实例化过程对外界透明;
+	 * 隐藏复杂的实例化细节;
 	 */
 	public static String transformedBeanName(String name) {
 		Assert.notNull(name, "'name' must not be null");

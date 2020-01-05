@@ -161,6 +161,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	@Override
 	@Nullable
 	public Object getSingleton(String beanName) {
+		// 参数true 允许早期依赖;
 		return getSingleton(beanName, true);
 	}
 
@@ -174,12 +175,13 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 */
 	@Nullable
 	protected Object getSingleton(String beanName, boolean allowEarlyReference) {
-		Object singletonObject = this.singletonObjects.get(beanName);
+		Object singletonObject = this.singletonObjects.get(beanName);// 从单例缓存中获取;
 		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
 			synchronized (this.singletonObjects) {
+				// 防止循环依赖的缓存做法;如果正在加载，就是这个提前曝光缓存有,就直接返回了;
 				singletonObject = this.earlySingletonObjects.get(beanName);
 				if (singletonObject == null && allowEarlyReference) {
-					ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+					ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);// 从单例工厂中获取;
 					if (singletonFactory != null) {
 						singletonObject = singletonFactory.getObject();
 						this.earlySingletonObjects.put(beanName, singletonObject);
@@ -201,8 +203,12 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 */
 	public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
 		Assert.notNull(beanName, "Bean name must not be null");
+		// 单例必须全局同步;
+		// 全局变量需要同步;
 		synchronized (this.singletonObjects) {
+			// 首先检查对应的bean是否已经加载过,因为singleton模式其实就是复用以创建的bean;所以这一步是必须的;
 			Object singletonObject = this.singletonObjects.get(beanName);
+			//如果单例为空,才进行初始化;
 			if (singletonObject == null) {
 				if (this.singletonsCurrentlyInDestruction) {
 					throw new BeanCreationNotAllowedException(beanName,
@@ -212,6 +218,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				if (logger.isDebugEnabled()) {
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
 				}
+				// 将加载状态加入singletonsCurrentlyInCreation，对循环依赖的检测;
 				beforeSingletonCreation(beanName);
 				boolean newSingleton = false;
 				boolean recordSuppressedExceptions = (this.suppressedExceptions == null);
@@ -242,8 +249,10 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					if (recordSuppressedExceptions) {
 						this.suppressedExceptions = null;
 					}
+					// 移除singletonsCurrentlyInCreation 中的加载状态：
 					afterSingletonCreation(beanName);
 				}
+				// 加入缓存并删除加载bean过程中所记录的各种辅助状态;
 				if (newSingleton) {
 					addSingleton(beanName, singletonObject);
 				}

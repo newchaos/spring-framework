@@ -62,6 +62,10 @@ public class XmlBeanFactory extends DefaultListableBeanFactory {
 	 * which must be parsable using DOM.
 	 * @param resource XML resource to load bean definitions from
 	 * @throws BeansException in case of loading or parsing errors
+	 *
+	 * 没读过大师的代码确实说自己会写程序是有些不自信的;
+	 * BeamFactory bf = new XmlBeanFactory(new ClassPathResource("bean.xml"));
+	 * bf.getBean("UserName");
 	 */
 	public XmlBeanFactory(Resource resource) throws BeansException {
 		this(resource, null);
