@@ -1122,6 +1122,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					"Bean class isn't public, and non-public access not allowed: " + beanClass.getName());
 		}
 
+		/// supplier的中文意思是提供者，跟Consumer类相反，Supplier类用于提供对象，它只有一个get方法，是一个抽象方法，需要编程者自定义想要返回的对象。
 		// 通过回调方法来创建bean;
 		Supplier<?> instanceSupplier = mbd.getInstanceSupplier();
 		if (instanceSupplier != null) {

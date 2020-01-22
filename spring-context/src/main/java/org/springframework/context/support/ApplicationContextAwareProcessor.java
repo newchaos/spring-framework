@@ -74,6 +74,7 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 	}
 
 
+	// 从invokeAwareInterfaces方法中，我们已经感受到了spring的用意,实现这些aware接口的bean在被初始化之后,可以取得一些对应的资源;
 	@Override
 	@Nullable
 	public Object postProcessBeforeInitialization(final Object bean, String beanName) throws BeansException {

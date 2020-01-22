@@ -1157,6 +1157,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * @return the transformed bean name
 	 */
 	protected String transformedBeanName(String name) {
+		// canonical 准确的，权威的，公认的;
+		// 1、解析factorybean的前缀,2、把别名给处理了;
 		return canonicalName(BeanFactoryUtils.transformedBeanName(name));
 	}
 

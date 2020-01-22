@@ -517,40 +517,58 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
 			// Prepare this context for refreshing.
+			//  在启动的时候对必须的变量如系统属性或者环境变量做存在性的验证
 			prepareRefresh();
 
+			// 初始化BeanFactory,并进行XML文件读取;
+			// 这一步之后ClassPathXmlApplicationContext包含了BeanFactory所提供的一切特征和功能；
+			// 并且在BeanFactory基础之上做了大量的扩展;
 			// Tell the subclass to refresh the internal bean factory.
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
+			// 对BeanFactory进行各种功能填充;@Quailfier和@Autowired就是这一步骤中增加的支持;
+			// 前面是通过配置解析获取beanfactory;之后从这个函数就开始对ApplicationContext进行功能扩展了;
 			// Prepare the bean factory for use in this context.
 			prepareBeanFactory(beanFactory);
 
 			try {
 				// Allows post-processing of the bean factory in context subclasses.
+				// 子类覆盖方法做额外的处理; 在常规功能上支持开放性的各种例外;
+				// beanfactory作为spring中容器功能的基础,用于存放所有已经加载的bean;
+				// 为了保证可扩展性,spring针对beanfactory做了大量的扩展;
+				// 比如我们熟知的PostProcessor都是在这里实现的;
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
+				// 激活各种BeanFactory处理器;
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
+				// 注册拦截Bean创建的bean处理器;这里只是注册;真正的调用是在getBean时候;
 				registerBeanPostProcessors(beanFactory);
 
+				// 为上下文初始化Message源;即不同语言的消息体;国际化处理;
 				// Initialize message source for this context.
 				initMessageSource();
 
+				// 初始化应用消息广播器;将放入ApplicationEventMulticaster的bean中;
 				// Initialize event multicaster for this context.
 				initApplicationEventMulticaster();
 
+				// 留给子类类初始化其他的bean;
 				// Initialize other special beans in specific context subclasses.
 				onRefresh();
 
+				// 在所有的bean中查找ListenerBean，注册到消息广播中;
 				// Check for listener beans and register them.
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
+				// 初始化剩下的单实例(非惰性的)
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
+				// 完成刷新过程,通知声明周期处理器lifecycleProcessor刷新过程;同时发出ContextRefershEvent通知别人;
 				finishRefresh();
 			}
 
@@ -584,7 +602,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 */
 	protected void prepareRefresh() {
 		// Switch to active.
-		this.startupDate = System.currentTimeMillis();
+		this.startupDate = System.currentTimeMillis();// 系统开始日期;
 		this.closed.set(false);
 		this.active.set(true);
 
@@ -592,11 +610,14 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			logger.info("Refreshing " + this);
 		}
 
-		// Initialize any placeholder property sources in the context environment.
+		// Initialize any placeholder（占位符） property sources in the context environment.
+		// 留给子类覆盖；
+		// 常见应用，比如我们把这块setRequireProprety("name")，然后在下面的validata中验证没有这个属性,就会抛出异常;
 		initPropertySources();
 
 		// Validate that all properties marked as required are resolvable:
 		// see ConfigurablePropertyResolver#setRequiredProperties
+		// 验证需要的属性文件是否都已经放入环境中;
 		getEnvironment().validateRequiredProperties();
 
 		// Store pre-refresh ApplicationListeners...
@@ -615,7 +636,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 
 	/**
-	 * <p>Replace any stub property sources with actual instances.
+	 * <p>Replace any stub(桩) property sources with actual instances.
 	 * @see org.springframework.core.env.PropertySource.StubPropertySource
 	 * @see org.springframework.web.context.support.WebApplicationContextUtils#initServletPropertySources
 	 */
@@ -630,7 +651,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see #getBeanFactory()
 	 */
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+		// 初始化BeanFactory，并进行XML文件读取,并将得到的BeanFactory记录在当前实体的属性中;
+		// 获取beanFactory的工作完成落在了这个方法上面;
 		refreshBeanFactory();
+		// 返回当前实体的beanFactory属性;
 		ConfigurableListableBeanFactory beanFactory = getBeanFactory();
 		if (logger.isDebugEnabled()) {
 			logger.debug("Bean factory for " + getDisplayName() + ": " + beanFactory);
@@ -644,13 +668,41 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @param beanFactory the BeanFactory to configure
 	 */
 	protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+		// 设置beanFactory的classloader为当前context的classloader
 		// Tell the internal bean factory to use the context's class loader etc.
 		beanFactory.setBeanClassLoader(getClassLoader());
+
+		// 设置beanFactory的表达式语言处理器;Spring3增加了表达式语言的支持;
+		// 默认可以使用#{bean.xxx}的形式来调用相关属性值;
+		// 调用的地方是:
+		// AbstractAutowireCapableBeanFactory#applyPropertyValue->
+		// BeanDefinitionValueResolver#resolveValueIfNecessary->
+		// BeanDefinitionValueResolver#doEvaluate
 		beanFactory.setBeanExpressionResolver(new StandardBeanExpressionResolver(beanFactory.getBeanClassLoader()));
+
+		// 为beanFactory增加了一个默认的propertyEditor,这个主要是对bean的属性等设置管理的一个工具;
+		// 在springDI的时候,比如Date类型无法被识别; 通过继承PropertyEditorSupport即可;
+		// 然后在初始化bean.factory.config.CustomEditorConfigurer的bean;并在customEditors中加入自定义的属性编辑器;
+		// key为属性编辑器所对应的类型;当spring在注入bean的属性时一旦遇到了java.util.Date类型的属性会自动条用自定义的属性解析器进行解析进行替代;
+		// 还有第二种方案就是使用spring自带的属性编辑器CustomDateEditor;
+		// 自定义类实现PropertyEditorRggister，然后在注册CustomEditorConfigurer时添加propertyEditorRegisters属性;
+		// 注意： 上面都是用的PropertyEditorRegistrar的registerCustomRegistrar做处理的;我们看下实现类ResourceEditorRegistrar的这个核心方法；
+		// Spring使用ClassEditor讲配置中的定义string类型转换为class类型并进行赋值;
+		// 调用地方:AbstractBeanFactory#initBeanWrapper->registerCustromEditor 调用上面的核心方法registerCustomRegistrar；
+		// BeanWrapper 间接继承了PropertyEditorRegistry,而它的默认实现BeanWrapperImpl还继承了PropertyEditorRegistrySupport,这个类有一个createDefaultEditors方法;
+		// 即spring中定义了上面一系列常用的属性编辑器使我们可以方便地进行配置，
+		// 如果我们定义的bean中的某个属性的类型不在上面的常用配置中的话，才需要我们进行个性化属性编辑器的注册;
 		beanFactory.addPropertyEditorRegistrar(new ResourceEditorRegistrar(this, getEnvironment()));
 
 		// Configure the bean factory with context callbacks.
+		// 这里主要就是添加beanPostProcessor，而真正的逻辑其实在ApplicationContextAwareProcessor里面;
+		// 在bean实例化的过程中,也就是spring激活bean的init-method的前后,
+		// 会调用BeanPostProcessor的postProcessBeforeInitialization方法和postProcessAfterInitialization方法;
+		// 对于子类ApplicationContextAwareProcessor也是一样;
 		beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
+
+		// 设置忽略依赖；设置了几个忽略自动装配的接口;
+		// 因为被上面的调用了，所以不是普通的bean，所以不要再去做依赖注入处理了;
 		beanFactory.ignoreDependencyInterface(EnvironmentAware.class);
 		beanFactory.ignoreDependencyInterface(EmbeddedValueResolverAware.class);
 		beanFactory.ignoreDependencyInterface(ResourceLoaderAware.class);
@@ -658,6 +710,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		beanFactory.ignoreDependencyInterface(MessageSourceAware.class);
 		beanFactory.ignoreDependencyInterface(ApplicationContextAware.class);
 
+		// 设置注册依赖；设置了几个自动装配的特殊规则; 指定注入的时候用什么注入依赖;
 		// BeanFactory interface not registered as resolvable type in a plain factory.
 		// MessageSource registered (and found for autowiring) as a bean.
 		beanFactory.registerResolvableDependency(BeanFactory.class, beanFactory);
@@ -668,6 +721,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		// Register early post-processor for detecting inner beans as ApplicationListeners.
 		beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(this));
 
+		// 增加对AspectJ的支持;
 		// Detect a LoadTimeWeaver and prepare for weaving, if found.
 		if (beanFactory.containsBean(LOAD_TIME_WEAVER_BEAN_NAME)) {
 			beanFactory.addBeanPostProcessor(new LoadTimeWeaverAwareProcessor(beanFactory));
@@ -675,6 +729,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			beanFactory.setTempClassLoader(new ContextTypeMatchClassLoader(beanFactory.getBeanClassLoader()));
 		}
 
+		// 添加默认的系统环境bean;
 		// Register default environment beans.
 		if (!beanFactory.containsLocalBean(ENVIRONMENT_BEAN_NAME)) {
 			beanFactory.registerSingleton(ENVIRONMENT_BEAN_NAME, getEnvironment());
