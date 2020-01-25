@@ -71,33 +71,59 @@ public abstract class AopNamespaceUtils {
 		registerComponentIfNecessary(beanDefinition, parserContext);
 	}
 
+	/**
+	 * 在类的层级中，可以看到AnnotationAwareAspectJAutoProxyCreator实现了BeanPostProcessor接口，
+	 * 而实现BeanPostProcessor后,当spring加载这个Bean时会在实例化前调用其postProcessorAfterInitialization方法;
+	 * 而我们对于Aop逻辑的分析也由此开始;
+	 * @param parserContext
+	 * @param sourceElement
+	 */
+	// 注册AnnotationAwareAspectJAutoProxyCreator
 	public static void registerAspectJAnnotationAutoProxyCreatorIfNecessary(
 			ParserContext parserContext, Element sourceElement) {
 
+		// 注册或升级AnnotationAwareAspectJAutoProxyCreator定位beanName为org.Springframework.aop.config.internalAutoProxyCreator的beanDefinition；
 		BeanDefinition beanDefinition = AopConfigUtils.registerAspectJAnnotationAutoProxyCreatorIfNecessary(
 				parserContext.getRegistry(), parserContext.extractSource(sourceElement));
+
+		//对于proxy-target-class以及expose-proxy属性的处理
 		useClassProxyingIfNecessary(parserContext.getRegistry(), sourceElement);
+		// 注册组件并通知，便于监听器做进一步的处理;
+		// 其中beanDefinition的classnamme为AnnotationAwareAspectJAutoProxyCreator
 		registerComponentIfNecessary(beanDefinition, parserContext);
 	}
 
+	/**
+	 * // JDK动态代理;其代理对象必须是某个接口的实现,它是通过在运行期间创建一个接口的实现类来完成对目标对象的代理;
+	 * CJLIB代理: 完成原理类似于JDK动态代理;只是他在运行期间生成的代理对象是针对目标类扩展的子类;CGLIB是高效的代码生成包
+	 * 底层是依靠ASM（开源的Java字节码编辑类库）操作字节码实现的;性能比JDK强；
+	 * expose-proxy: 有时候目标对象内部的自我调用将无法实施切面中的增强,所以需要将这个字段设置为true才有效；
+	 * CGLIB采取的是继承方式实现代理，所以他们无法通知Final方法，因为他们不能给覆写; 还有内部的自我调用业务方实现增强;
+	 * @param registry
+	 * @param sourceElement
+	 */
 	private static void useClassProxyingIfNecessary(BeanDefinitionRegistry registry, @Nullable Element sourceElement) {
 		if (sourceElement != null) {
+			// 对于proxy-target-classs属性的处理; // 强制使用CGLIB代理需要将<aop:config/>的proxy-target-class设置为true;
+
 			boolean proxyTargetClass = Boolean.parseBoolean(sourceElement.getAttribute(PROXY_TARGET_CLASS_ATTRIBUTE));
 			if (proxyTargetClass) {
 				AopConfigUtils.forceAutoProxyCreatorToUseClassProxying(registry);
 			}
+			/// 对于expose-proxy属性的处理;
 			boolean exposeProxy = Boolean.parseBoolean(sourceElement.getAttribute(EXPOSE_PROXY_ATTRIBUTE));
 			if (exposeProxy) {
+
 				AopConfigUtils.forceAutoProxyCreatorToExposeProxy(registry);
 			}
 		}
 	}
 
+	// 注册组件并通知，便于监听器做进一步的处理;
 	private static void registerComponentIfNecessary(@Nullable BeanDefinition beanDefinition, ParserContext parserContext) {
 		if (beanDefinition != null) {
 			parserContext.registerComponent(
 					new BeanComponentDefinition(beanDefinition, AopConfigUtils.AUTO_PROXY_CREATOR_BEAN_NAME));
 		}
 	}
-
 }
