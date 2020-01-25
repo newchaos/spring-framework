@@ -440,6 +440,16 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	}
 
 	/**
+	 *
+	 * 对于代理的创建和处理，Spring委托给了ProxyFactory去处理,而在此函数中主要是对ProxyFactory的初始化操作，进而对真正的创建代理做准备;
+	 * 这些初始化操作包括如下内容；
+	 * 获取当前类的属性；
+	 * 添加代理接口
+	 * 封装advisor并加入到ProxyFactory中;
+	 * 设置要代理的类；
+	 * 当然在spring中还未子类提供了定制的函数customizeProxyFactory,子类可以对此函数中对proxy的进一步的封装;
+	 *  进行获取代理操作;
+	 *
 	 * Create an AOP proxy for the given bean.
 	 * @param beanClass the class of the bean
 	 * @param beanName the name of the bean
@@ -458,8 +468,11 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		}
 
 		ProxyFactory proxyFactory = new ProxyFactory();
+		// 获取当前类中的相关属性;
 		proxyFactory.copyFrom(this);
 
+		// 决定对于给定的bean是否应该使用targetClass而不是它的接口代理;
+		// 接口proxyTargeClass设置以及preserveTargetClass属性;
 		if (!proxyFactory.isProxyTargetClass()) {
 			if (shouldProxyTargetClass(beanClass, beanName)) {
 				proxyFactory.setProxyTargetClass(true);
@@ -470,10 +483,14 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		}
 
 		Advisor[] advisors = buildAdvisors(beanName, specificInterceptors);
+		// 加入增强器;
 		proxyFactory.addAdvisors(advisors);
+		// 设置要代理的类;
 		proxyFactory.setTargetSource(targetSource);
+		// 定制代理;
 		customizeProxyFactory(proxyFactory);
-
+		// 用来控制代理工厂被配置之后，是否海域徐修改通知;
+		// 缺省为false,即在代理配置之后不允许修改代理的配置;
 		proxyFactory.setFrozen(this.freezeProxy);
 		if (advisorsPreFiltered()) {
 			proxyFactory.setPreFiltered(true);

@@ -74,6 +74,12 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 
 
 	/**
+	 * 思路:
+	 * 1、获取所有beanName，这一步骤中所有在beanFactory中注册的bean都会提取出来;
+	 * 2、遍历所有的bean，并找到声明AspectJ注解的累，进行进一步的处理;
+	 * 3、对标记为AspectJ注解的累进行增强器的提取;
+	 * 4、将提取结果加入缓存;
+	 *  该方法是对spring中所有的累进行分析,提取Advisor;
 	 * Look for AspectJ-annotated aspect beans in the current bean factory,
 	 * and return to a list of Spring AOP Advisors representing them.
 	 * <p>Creates a Spring Advisor for each AspectJ advice method.
@@ -89,24 +95,31 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 				if (aspectNames == null) {
 					List<Advisor> advisors = new ArrayList<>();
 					aspectNames = new ArrayList<>();
+					// 获取所有的beanname;
 					String[] beanNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 							this.beanFactory, Object.class, true, false);
+					// 循环所有的beanname找到对应的增强方法;
 					for (String beanName : beanNames) {
+						// 不合法的bean则略过,由子类定义规则,默认返回true;
 						if (!isEligibleBean(beanName)) {
 							continue;
 						}
+						// 获取对应的bena的类型;
 						// We must be careful not to instantiate beans eagerly as in this case they
 						// would be cached by the Spring container but would not have been weaved.
 						Class<?> beanType = this.beanFactory.getType(beanName);
 						if (beanType == null) {
 							continue;
 						}
+						// 如果存在Aspect注解;
 						if (this.advisorFactory.isAspect(beanType)) {
 							aspectNames.add(beanName);
 							AspectMetadata amd = new AspectMetadata(beanType, beanName);
 							if (amd.getAjType().getPerClause().getKind() == PerClauseKind.SINGLETON) {
 								MetadataAwareAspectInstanceFactory factory =
 										new BeanFactoryAspectInstanceFactory(this.beanFactory, beanName);
+								// 解析标记AspectJ注解中的增强方法;
+								// 这个增强器的获取就是上面所有工作中最繁杂的步骤也是最重要的了；
 								List<Advisor> classAdvisors = this.advisorFactory.getAdvisors(factory);
 								if (this.beanFactory.isSingleton(beanName)) {
 									this.advisorsCache.put(beanName, classAdvisors);
@@ -114,6 +127,7 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 								else {
 									this.aspectFactoryCache.put(beanName, factory);
 								}
+								// 记录在缓存中;
 								advisors.addAll(classAdvisors);
 							}
 							else {
