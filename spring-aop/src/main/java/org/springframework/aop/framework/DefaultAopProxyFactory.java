@@ -46,8 +46,28 @@ import org.springframework.aop.SpringProxy;
 @SuppressWarnings("serial")
 public class DefaultAopProxyFactory implements AopProxyFactory, Serializable {
 
+	/**
+	 * 如果目标对象实现了接口，默认情况下会采用jdk的动态代理实现aop；
+	 * 如果目标对象实现了接口，可以强制使用cglib的aop；
+	 * 如果目标对象没有实现接口，必须要使用cglib库，spring会自动在jdk动态代理和cglib直接转换；
+	 * 如何强制使用cglib实现aop；
+	 * 1、添加cglib库，spring-home/cglib/*.jar;
+	 * 2、在spring配置文件中加入 proxy-target-class的参数;
+	 * jdk动态代理和cglib字节码生成的区别;
+	 * jdk针对接口实现代理；
+	 * cglib针对实现生成代理，生成一个子类覆盖原来方法，因为继承，所以该方法最好不要声明final；另外内部调用可能有问题;
+	 * @param config the AOP configuration in the form of an
+	 * AdvisedSupport object
+	 * @return
+	 * @throws AopConfigException
+	 */
 	@Override
 	public AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException {
+
+		// 代理配置的三个属性:optimize; optimize:设置为true时,强制作用CGLib代理
+		// proxyTargetClass == true 为cglib代理;
+		// hasNoUserSuppliedProxyInterfaces 是否存在代理接口;
+
 		if (config.isOptimize() || config.isProxyTargetClass() || hasNoUserSuppliedProxyInterfaces(config)) {
 			Class<?> targetClass = config.getTargetClass();
 			if (targetClass == null) {
@@ -60,6 +80,7 @@ public class DefaultAopProxyFactory implements AopProxyFactory, Serializable {
 			return new ObjenesisCglibAopProxy(config);
 		}
 		else {
+			// jdk实现了InvocationHandler里面有实现调用方法的invoke方法;核心逻辑会在这个方法里面;
 			return new JdkDynamicAopProxy(config);
 		}
 	}

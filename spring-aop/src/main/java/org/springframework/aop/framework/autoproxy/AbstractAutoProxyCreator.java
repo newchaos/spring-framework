@@ -482,6 +482,9 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 			}
 		}
 
+		// 封装advisor并加入到ProxyFactory中以及创建代理是两个相对繁琐的过程，
+		// 可以通过ProxyFactory提供的addAdvisor方法直接将增强器置入代理创建工厂中；
+		// 但是将拦截器封装为增强器还是需要一定的逻辑的;
 		Advisor[] advisors = buildAdvisors(beanName, specificInterceptors);
 		// 加入增强器;
 		proxyFactory.addAdvisors(advisors);
@@ -495,7 +498,9 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		if (advisorsPreFiltered()) {
 			proxyFactory.setPreFiltered(true);
 		}
-
+		// spring中涉及过多的拦截器，增强器，增强方法等方式来对逻辑进行增强；
+		// 所以有一笔要统一封装成advicor来进行带的创建，完成了增强的封装过程；
+		// 而最重要的一步就是代理的创建和获取了;
 		return proxyFactory.getProxy(getProxyClassLoader());
 	}
 
@@ -534,13 +539,18 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 * @param specificInterceptors the set of interceptors that is
 	 * specific to this bean (may be empty, but not null)
 	 * @return the list of Advisors for the given bean
+	 * 		// 封装advisor并加入到ProxyFactory中以及创建代理是两个相对繁琐的过程，
+	 * 		// 可以通过ProxyFactory提供的addAdvisor方法直接将增强器置入代理创建工厂中；
+	 * 		// 但是将拦截器封装为增强器还是需要一定的逻辑的;
 	 */
 	protected Advisor[] buildAdvisors(@Nullable String beanName, @Nullable Object[] specificInterceptors) {
 		// Handle prototypes correctly...
+		// 解析所有的InterceptorNames
 		Advisor[] commonInterceptors = resolveInterceptorNames();
 
 		List<Object> allInterceptors = new ArrayList<>();
 		if (specificInterceptors != null) {
+			// 加入拦截器;
 			allInterceptors.addAll(Arrays.asList(specificInterceptors));
 			if (commonInterceptors.length > 0) {
 				if (this.applyCommonInterceptorsFirst) {
@@ -560,6 +570,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 
 		Advisor[] advisors = new Advisor[allInterceptors.size()];
 		for (int i = 0; i < allInterceptors.size(); i++) {
+			// 将各种拦截器进行封装转化为Advisor；
 			advisors[i] = this.advisorAdapterRegistry.wrap(allInterceptors.get(i));
 		}
 		return advisors;
