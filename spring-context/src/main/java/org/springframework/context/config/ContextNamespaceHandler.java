@@ -27,6 +27,8 @@ import org.springframework.context.annotation.ComponentScanBeanDefinitionParser;
  * @author Mark Fisher
  * @author Juergen Hoeller
  * @since 2.5
+ * load-time-weaver 加载时织入的解析器;
+ *
  */
 public class ContextNamespaceHandler extends NamespaceHandlerSupport {
 
