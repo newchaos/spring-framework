@@ -116,6 +116,9 @@ public class ReflectiveAspectJAdvisorFactory extends AbstractAspectJAdvisorFacto
 	 * 函数中首先完成了对增强器的获取，包括获取注释以及根据注解生成增强的步骤，
 	 * 然后考虑到在配置中可能会将增强配置成延迟初始化，那么需要在首位加入同步实例化增强器以保证增强使用之前的实例化；
 	 * 最后对DeclareParents注解的获取;
+	 * 两个常见的增强器：
+	 * 前置增强器:MethodBeforeAdviceInterceptor；
+	 * 后置增强器:AspctJAfterAdvice;
 	 * @param aspectInstanceFactory the aspect instance factory
 	 * (not the aspect instance itself in order to avoid eager instantiation)
 	 * @return
@@ -154,7 +157,7 @@ public class ReflectiveAspectJAdvisorFactory extends AbstractAspectJAdvisorFacto
 		}
 
 		// 获取DeclareParents注解;
-		// DeclareParents 主要是用于引介增强的注解形式的实现，
+		// DeclareParents 主要是用于引介增强的注解形式的实现，引介增强就是类上加注解;
 		// 而其实现方式与普通增强很类似，只不过使用DeclareParentsAdvisor对功能进行封装;
 		// Find introduction fields.
 		for (Field field : aspectClass.getDeclaredFields()) {
@@ -181,6 +184,8 @@ public class ReflectiveAspectJAdvisorFactory extends AbstractAspectJAdvisorFacto
 	}
 
 	/**
+	 * 引介增强是一种比较特殊的增强类型，它不是在目标方法周围织入增强，而是为目标类创建新的方法和属性，所以引介增强的连接点是类级别的，而非方法级别的。
+	 * 通过引介增强，我们可以为目标类添加一个接口的实现，即原来目标类未实现某个接口，通过引介增强可以为目标类创建实现该接口的代理。
 	 * Build a {@link org.springframework.aop.aspectj.DeclareParentsAdvisor}
 	 * for the given introduction field.
 	 * <p>Resulting Advisors will need to be evaluated for targets.
@@ -205,6 +210,8 @@ public class ReflectiveAspectJAdvisorFactory extends AbstractAspectJAdvisorFacto
 
 
 	// 普通增强器的获取逻辑通过getAdvisor方法实现，实现步骤包括对切点的注解的获取以及根据注解信息生成增强;
+	// 第一步找到所有的切面；
+	// 第二步封装所有的切面为切面对象InstantiationModelAwarePointcutAdvisorImpl
 	@Override
 	@Nullable
 	public Advisor getAdvisor(Method candidateAdviceMethod, MetadataAwareAspectInstanceFactory aspectInstanceFactory,
@@ -228,6 +235,7 @@ public class ReflectiveAspectJAdvisorFactory extends AbstractAspectJAdvisorFacto
 		// 获取方法上的注解;
 		AspectJAnnotation<?> aspectJAnnotation =
 				AbstractAspectJAdvisorFactory.findAspectJAnnotationOnMethod(candidateAdviceMethod);
+		// 如果没有切面就over了;
 		if (aspectJAnnotation == null) {
 			return null;
 		}

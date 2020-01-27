@@ -116,6 +116,7 @@ class InstantiationModelAwarePointcutAdvisorImpl
 			// A singleton aspect.
 			this.pointcut = this.declaredPointcut;
 			this.lazy = false;
+			// 处理很多切面初始化的事情等;
 			this.instantiatedAdvice = instantiateAdvice(this.declaredPointcut);
 		}
 	}

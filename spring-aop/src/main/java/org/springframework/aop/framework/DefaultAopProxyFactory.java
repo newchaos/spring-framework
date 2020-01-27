@@ -77,6 +77,9 @@ public class DefaultAopProxyFactory implements AopProxyFactory, Serializable {
 			if (targetClass.isInterface() || Proxy.isProxyClass(targetClass)) {
 				return new JdkDynamicAopProxy(config);
 			}
+			// cglib包的底层是通过使用一个小儿快的字节码处理框架ASM,来转换字节码并生成新的类;
+			// 除了cglib包,脚本语言例如groovy和BeanShell,也是使用ASM来生成Java的字节码;
+			// 当然不鼓励使用ASM,因为他要求你必须要对JVM内部结构非常熟悉;
 			return new ObjenesisCglibAopProxy(config);
 		}
 		else {

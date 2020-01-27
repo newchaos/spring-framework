@@ -353,11 +353,12 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 			return bean;
 		}
 
-		// 如果存在增强方法则创建代理; 这里是真正开始的创建代理的地方;
+		// 如果存在增强方法则创建代理; 这里是真正开始的创建代理的地方; 先获取所有的增强的切面忠告;
 		// 创建代理主要包含了两个步骤: 1、获取增强方法或者增强器;2、根据获取的增强进行代理;
 		// Create proxy if we have advice.
 		Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
 		// 如果获取到了增强则需要针对增强创建代理;
+		// 如果存在切面，就开始干;
 		if (specificInterceptors != DO_NOT_PROXY) {
 			this.advisedBeans.put(cacheKey, Boolean.TRUE);
 			// 创建代理;

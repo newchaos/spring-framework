@@ -155,6 +155,15 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	}
 
 
+	/**
+	 * 				// 执行拦截器链条；
+	 * 				// 这个方法里面逻辑并没有那么复杂，他的主要职责是维护链接调用的计数器;
+	 * 				// 记录着当前调用链接的位置,以便链可以有序地进行下去；
+	 * 				// 这个方法里面并没有维护各种增强的顺序；
+	 * 				// 这份工作只是委托了各种增强器，使各个增强器在内部进行逻辑实现；
+	 * @return
+	 * @throws Throwable
+	 */
 	@Override
 	@Nullable
 	public Object proceed() throws Throwable {
@@ -165,7 +174,7 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 
 		// 获取下一个要执行的拦截器;
 		Object interceptorOrInterceptionAdvice =
-				this.interceptorsAndDynamicMethodMatchers.get(++this.currentInterceptorIndex);
+				this.interceptorsAndDynamicMethodMatchers.get(++this.currentInterceptorIndex);// 计数器;
 		if (interceptorOrInterceptionAdvice instanceof InterceptorAndDynamicMethodMatcher) {
 			// 动态匹配;
 			// Evaluate dynamic method matcher here: static part will already have

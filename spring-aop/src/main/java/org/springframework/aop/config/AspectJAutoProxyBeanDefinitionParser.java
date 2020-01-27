@@ -38,6 +38,7 @@ import org.springframework.lang.Nullable;
  */
 class AspectJAutoProxyBeanDefinitionParser implements BeanDefinitionParser {
 
+	// 解析器的核心方法当然是parse函数了;
 	@Override
 	@Nullable
 	public BeanDefinition parse(Element element, ParserContext parserContext) {

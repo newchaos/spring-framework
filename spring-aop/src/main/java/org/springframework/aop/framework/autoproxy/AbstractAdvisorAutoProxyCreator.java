@@ -72,7 +72,7 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	@Nullable
 	protected Object[] getAdvicesAndAdvisorsForBean(
 			Class<?> beanClass, String beanName, @Nullable TargetSource targetSource) {
-		// 找到适合的(Eligible)增强器
+		// 找到适合的(Eligible)增强器,
 		// 包括两个步骤，获取所有的增强以及寻找所有增加值适用于bean的增强并应用;
 		List<Advisor> advisors = findEligibleAdvisors(beanClass, beanName);
 		if (advisors.isEmpty()) {

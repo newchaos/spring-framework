@@ -55,6 +55,8 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 public class AopNamespaceHandler extends NamespaceHandlerSupport {
 
 	/**
+	 * springAop的实现就是通过自定义标签aspectj-autoproxy配置实现的;所以一定在程序中有某个地方有其对应的解析器;
+	 * 而动态Aop就是这么来实现的;
 	 * Register the {@link BeanDefinitionParser BeanDefinitionParsers} for the
 	 * '{@code config}', '{@code spring-configured}', '{@code aspectj-autoproxy}'
 	 * and '{@code scoped-proxy}' tags.

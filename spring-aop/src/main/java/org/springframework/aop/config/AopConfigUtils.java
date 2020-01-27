@@ -98,6 +98,14 @@ public abstract class AopConfigUtils {
 	 * 他根据@point注解定义的切点来自动代理相匹配的bean,但是为了配置简便;
 	 * Spring使用了自定义配置来帮助我们自动注册AnnotationAwareAspectJAutoProxyCreator，
 	 * 其注册过程就是下面的函数;
+	 *
+	 *
+	 * aop的处理的类是 AnnotationAwareAspectJAutoProxyCreator 这个代理对象创建器;
+	 * 最终的其核心逻辑代理的创建是其实现了BeanPostProcessor，然后通过其post...方法来实现aop的逻辑的;
+	 * 创建aop代理是在AnnotationAwareAspectJAutoProxyCreator的父类AbstractAutoProxyCreator的postProcessAfterInitialization方法中实现的;
+	 * 如果需要被代理，则会创建代理对象的忠告切面等被封住的proxy对象;否则则返回原来的bean对象;
+	 *
+	 *
 	 */
 	@Nullable
 	public static BeanDefinition registerAspectJAnnotationAutoProxyCreatorIfNecessary(
@@ -120,6 +128,15 @@ public abstract class AopConfigUtils {
 		}
 	}
 
+	/**
+	 * 该方法就是实现自动注册AnnotationAwareAspectJAutoProxyCreator类的功能，
+	 * 同时还涉及了一个优先级的问题，如果已经存在了自动代理创建器；
+	 * 如果存在的创建器和现在的不一致，则需要根据优先级来判断到底需要使用哪个；
+	 * @param cls
+	 * @param registry
+	 * @param source
+	 * @return
+	 */
 	@Nullable
 	private static BeanDefinition registerOrEscalateApcAsRequired(
 			Class<?> cls, BeanDefinitionRegistry registry, @Nullable Object source) {
