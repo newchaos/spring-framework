@@ -483,6 +483,25 @@ public class DispatcherServlet extends FrameworkServlet {
 
 
 	/**
+	 * 	 * ContextLoadeListener 继承 ServletContextListener,
+	 * 	 * 因为在web容器启动的时候会触发ServletContextListener监听的事件;监听到这个事情之后会调用对应的方法;
+	 * 	 * 而这个方法主要是将webapplication的spring配置给加载进来；
+	 * 	 * 只是对webApplicationContext的实例化，是spring的辅助功能；
+	 * 	 * 主要功能还是DispacherServlet中进行的;
+	 * 	 * DispacherServlet是Servlet规范的一个Servlet接口;
+	 * 	 * 它的声明周期是由容器来控制的,主要分为三个阶段：初始化，运行，和销毁;
+	 * 	 * 重点先看初始化：方法在其父类HttpServletBean#init,然后有一个模板方法initServletBean回到FrameworkServlet类;
+	 * 	 * 调用链路逻辑是:
+	 * 	 * HttpServletBean#init ->
+	 * 	 * FrameworkServlet#initServletBean ->
+	 * 	 * FrameworkServlet#initWebApplicationContext ->
+	 * 	 * DispacherServlet#onRefresh ->
+	 * 	 * DispacherServlet#initStrategies
+	 * 	 * 然后就是springmvc的几大组件的解析:
+	 * 	 重要的三大组件如下:
+	 * 	 * 处理器映射器:xxxMapping;
+	 * 	 * 处理器适配器:xxxAdapter;
+	 * 	 * 视图解析器: xxxViewResolver
 	 * This implementation calls {@link #initStrategies}.
 	 */
 	@Override

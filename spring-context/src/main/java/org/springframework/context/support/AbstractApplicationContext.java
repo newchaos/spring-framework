@@ -570,6 +570,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				initMessageSource();
 
 				// 初始化应用消息广播器;将放入ApplicationEventMulticaster的bean中;
+				// 广播器Multicaster主要是用来注册监听器的;
+				// 而事件的发布是需要publish来做的;
 				// Initialize event multicaster for this context.
 				initApplicationEventMulticaster();
 

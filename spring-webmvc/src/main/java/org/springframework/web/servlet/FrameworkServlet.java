@@ -499,7 +499,10 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		long startTime = System.currentTimeMillis();
 
 		try {
+			// servletBean的初始化,在ContextLoaderListener加载的时候创建了WebApplicationContext实例;
+			// 而在这个函数中最重要的就是对这个实例进一步的补充初始化;初始化的逻辑全部委托给了这个方法;
 			this.webApplicationContext = initWebApplicationContext();
+			//给子类覆盖;
 			initFrameworkServlet();
 		}
 		catch (ServletException | RuntimeException ex) {
@@ -1089,7 +1092,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 
 	/**
 	 * Determine the username for the given request.
-	 * <p>The default implementation takes the name of the UserPrincipal, if any.
+	 * <p>The default implementation takes the n ame of the UserPrincipal, if any.
 	 * Can be overridden in subclasses.
 	 * @param request current HTTP request
 	 * @return the username, or {@code null} if none found

@@ -139,6 +139,7 @@ public class ContextLoader {
 		// This is currently strictly internal and not meant to be customized
 		// by application developers.
 		try {
+			// org.springframework.web.context.WebApplicationContext=org.springframework.web.context.support.XmlWebApplicationContext
 			ClassPathResource resource = new ClassPathResource(DEFAULT_STRATEGIES_PATH, ContextLoader.class);
 			defaultStrategies = PropertiesLoaderUtils.loadProperties(resource);
 		}
@@ -256,9 +257,36 @@ public class ContextLoader {
 	 * @see #ContextLoader(WebApplicationContext)
 	 * @see #CONTEXT_CLASS_PARAM
 	 * @see #CONFIG_LOCATION_PARAM
+	 *
+	 * ContextLoadeListener 继承 ServletContextListener,
+	 * 因为在web容器启动的时候会触发ServletContextListener监听的事件;监听到这个事情之后会调用对应的方法;
+	 * 而这个方法主要是将webapplication的spring配置给加载进来；
+	 * 只是对webApplicationContext的实例化，是spring的辅助功能；
+	 * 主要功能还是DispacherServlet中进行的;
+	 * DispacherServlet是Servlet规范的一个Servlet接口;
+	 * 它的声明周期是由容器来控制的,主要分为三个阶段：初始化，运行，和销毁;
+	 * 重点先看初始化：方法在其父类HttpServletBean#init,然后有一个模板方法initServletBean回到FrameworkServlet类;
+	 * 调用链路逻辑是:
+	 * HttpServletBean#init ->
+	 * FrameworkServlet#initServletBean ->
+	 * FrameworkServlet#initWebApplicationContext ->
+	 * DispacherServlet#onRefresh ->
+	 * DispacherServlet#initStrategies
+	 * 然后就是springmvc的三大组件的解析:
+	 * 处理器映射器:xxxMapping;
+	 * 处理器适配器:xxxAdapter;
+	 * 视图解析器: xxxViewResolver
+	 *
+	 * 将webapplicationcontext添加到servletcontext头里面大致步骤如下:
+	 * 1、ServletContextListener存在的验证;避免多次声明导致逻辑混乱;只能声明一次;
+	 * 2、创建WebApplicationContxt实例;
+	 * 3、将实例记录在servletContext中;
+	 * 4、映射当前的类加载器与创建的实例到全局变量currentContextPerThread;
+	 *
 	 */
 	public WebApplicationContext initWebApplicationContext(ServletContext servletContext) {
 		if (servletContext.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE) != null) {
+			// webxml中存在多次contextloader定义,扰乱逻辑;
 			throw new IllegalStateException(
 					"Cannot initialize context because there is already a root application context present - " +
 					"check whether you have multiple ContextLoader* definitions in your web.xml!");
