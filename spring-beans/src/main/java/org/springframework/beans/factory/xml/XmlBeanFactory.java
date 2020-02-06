@@ -47,10 +47,17 @@ import org.springframework.core.io.Resource;
  * @since 15 April 2001
  * @see org.springframework.beans.factory.support.DefaultListableBeanFactory
  * @see XmlBeanDefinitionReader
- * @deprecated as of Spring 3.1 in favor of {@link DefaultListableBeanFactory} and
+ * //@deprecated as of Spring 3.1 in favor of {@link DefaultListableBeanFactory} and
  * {@link XmlBeanDefinitionReader}
+ *
+ * 打算在该框架下面新建一个模块来调试跟踪spring的源码，也方便添加注释，结果运行main方法的时候总是报这个错误；
+ * 把类上面的@Deprecated去掉也不行，类上面还是有中划线；原来是因为这个注释上面还有这个注解；要这两个都去掉就会把过时去掉了；
+ *  警告: [deprecation] org.springframework.beans.factory.xml中的XmlBeanFactory已过时
+ * import org.springframework.beans.factory.xml.XmlBeanFactory;
+ *
+ *
  */
-@Deprecated
+//@Deprecated
 @SuppressWarnings({"serial", "all"})
 public class XmlBeanFactory extends DefaultListableBeanFactory {
 

@@ -1,0 +1,10 @@
+description = "Spring Debugger"
+
+dependencies {
+    compile(project(":spring-core"))
+    compile(project(":spring-aop"))
+    compile(project(":spring-beans"))
+    compile(project(":spring-context"))
+    compile(project(":spring-expression"))
+    compile(project(":spring-web"))
+}

@@ -470,7 +470,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * @see DocumentLoader#loadDocument
 	 *
 	 *
-	 * getEntityResolver() 默认是通过网络来请求,但是会比较慢，所以这里采取了手动从本地获取;
+	 * getEntityResolver() 默认是通过网络来请求约束文件,但是会比较慢，所以这里采取了手动从本地获取;
 	 * getValidationModeForResource(resource) 获取应该校验的模式,到底是dtd还是xsd的格式;
 	 */
 	protected Document doLoadDocument(InputSource inputSource, Resource resource) throws Exception {
