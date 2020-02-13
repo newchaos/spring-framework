@@ -268,6 +268,8 @@ configure(subprojects - project(":spring-build-src")) { subproject ->
 		//archives javadocJar
 	}
 
+	// 新加的任务,解决编译oxm的乱码问题,同时在idea的编译配置compliner的参数设置-encoding utf-8的配置;
+	// 这个方法的参数，高版本是JavaCompile,低版本是Compile
 	tasks.withType(JavaCompile) {
 		options.encoding = "UTF-8"
 	}
