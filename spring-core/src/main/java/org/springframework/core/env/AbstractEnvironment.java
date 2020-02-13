@@ -105,6 +105,7 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 
 	private final Set<String> activeProfiles = new LinkedHashSet<>();
 
+	// 默认的profile配置;直接初始化;
 	private final Set<String> defaultProfiles = new LinkedHashSet<>(getReservedDefaultProfiles());
 
 	private final MutablePropertySources propertySources = new MutablePropertySources(this.logger);
@@ -212,6 +213,8 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 * customize the set of reserved names.
 	 * @see #RESERVED_DEFAULT_PROFILE_NAME
 	 * @see #doGetDefaultProfiles()
+	 *
+	 * 默认的profile配置;
 	 */
 	protected Set<String> getReservedDefaultProfiles() {
 		return Collections.singleton(RESERVED_DEFAULT_PROFILE_NAME);

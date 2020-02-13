@@ -82,6 +82,7 @@ public class ClassPathResource extends AbstractFileResolvingResource {
 			pathToUse = pathToUse.substring(1);
 		}
 		this.path = pathToUse;
+		// 按照获取当前线程上下文类加载器—>获取当前类类加载器—>获取系统启动类加载器的顺序来获取；
 		this.classLoader = (classLoader != null ? classLoader : ClassUtils.getDefaultClassLoader());
 	}
 

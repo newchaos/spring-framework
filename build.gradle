@@ -26,7 +26,7 @@ plugins {
 	id "com.gradle.build-scan" version "1.8"
 	id "io.spring.dependency-management" version "1.0.7.RELEASE" apply false
 	id "org.jetbrains.kotlin.jvm" version "1.2.71" apply false
-	id "org.jetbrains.dokka" version "0.9.17"
+	id "org.jetbrains.dokka" version "0.9.18"
 	id "org.asciidoctor.convert" version "1.5.6"
 }
 
@@ -81,7 +81,7 @@ configure(allprojects) { project ->
 	apply plugin: "java"
 	apply plugin: "kotlin"
 	apply plugin: "propdeps"
-//	apply plugin: "test-source-set-dependencies"
+	apply plugin: "test-source-set-dependencies"
 	apply plugin: "io.spring.dependency-management"
 	apply from: "${gradleScriptDir}/ide.gradle"
 
@@ -126,12 +126,12 @@ configure(allprojects) { project ->
 		options.encoding = "UTF-8"
 	}
 
-//	compileTestJava {
-//		sourceCompatibility = 1.8  // can be switched to 10 for testing
-//		targetCompatibility = 1.8
-//		options.encoding = "UTF-8"
-//		options.compilerArgs += "-parameters"
-//	}
+	compileTestJava {
+		sourceCompatibility = 1.8  // can be switched to 10 for testing
+		targetCompatibility = 1.8
+		options.encoding = "UTF-8"
+		options.compilerArgs += "-parameters"
+	}
 
 	compileKotlin {
 		kotlinOptions {
@@ -142,50 +142,50 @@ configure(allprojects) { project ->
 		}
 	}
 
-//	compileTestKotlin {
-//		kotlinOptions {
-//			jvmTarget = "1.8"
-//			freeCompilerArgs = ["-Xjsr305=strict"]
-//		}
-//	}
+	compileTestKotlin {
+		kotlinOptions {
+			jvmTarget = "1.8"
+			freeCompilerArgs = ["-Xjsr305=strict"]
+		}
+	}
 
-//	test {
-//		systemProperty("java.awt.headless", "true")
-//		systemProperty("testGroups", project.properties.get("testGroups"))
-//		scanForTestClasses = false
-//		include(["**/*Tests.class", "**/*Test.class"])
-//		// Since we set scanForTestClasses to false, we need to filter out inner
-//		// classes with the "$" pattern; otherwise, using -Dtest.single=MyTests to
-//		// run MyTests by itself will fail if MyTests contains any inner classes.
-//		exclude(["**/Abstract*.class", '**/*$*'])
-//		reports.junitXml.setDestination(file("$buildDir/test-results"))
-//	}
+	test {
+		systemProperty("java.awt.headless", "true")
+		systemProperty("testGroups", project.properties.get("testGroups"))
+		scanForTestClasses = false
+		include(["**/*Tests.class", "**/*Test.class"])
+		// Since we set scanForTestClasses to false, we need to filter out inner
+		// classes with the "$" pattern; otherwise, using -Dtest.single=MyTests to
+		// run MyTests by itself will fail if MyTests contains any inner classes.
+		exclude(["**/Abstract*.class", '**/*$*'])
+		reports.junitXml.setDestination(file("$buildDir/test-results"))
+	}
 
 	repositories {
 		maven { url "https://repo.spring.io/libs-release" }
 	}
 
 	dependencies {
-//		testCompile("junit:junit:4.12") {
-//			exclude group: "org.hamcrest", module: "hamcrest-core"
-//		}
-//		testCompile("org.mockito:mockito-core:2.19.1") {
-//			exclude group: "org.hamcrest", module: "hamcrest-core"
-//		}
-//		testCompile("com.nhaarman:mockito-kotlin:1.6.0") {
-//			exclude module: "kotlin-stdlib"
-//			exclude module: "kotlin-reflect"
-//			exclude module: "mockito-core"
-//		}
-//		testCompile("org.hamcrest:hamcrest-all:1.3")
-//		testRuntime("org.apache.logging.log4j:log4j-core:${log4jVersion}")
-//		testRuntime("org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}")
-//		testRuntime("org.apache.logging.log4j:log4j-jul:${log4jVersion}")
+		testCompile("junit:junit:4.12") {
+			exclude group: "org.hamcrest", module: "hamcrest-core"
+		}
+		testCompile("org.mockito:mockito-core:2.19.1") {
+			exclude group: "org.hamcrest", module: "hamcrest-core"
+		}
+		testCompile("com.nhaarman:mockito-kotlin:1.6.0") {
+			exclude module: "kotlin-stdlib"
+			exclude module: "kotlin-reflect"
+			exclude module: "mockito-core"
+		}
+		testCompile("org.hamcrest:hamcrest-all:1.3")
+		testRuntime("org.apache.logging.log4j:log4j-core:${log4jVersion}")
+		testRuntime("org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}")
+		testRuntime("org.apache.logging.log4j:log4j-jul:${log4jVersion}")
 		// JSR-305 only used for non-required meta-annotations
 		// 为了减少编译的东西,这个不能去掉，这个模块里面其他都可以去掉；
 		// 这块去掉后，我运行main方法很多地方会报各种注解找不到的错误；不知道干啥用的，这个包；
 		compileOnly("com.google.code.findbugs:jsr305:3.0.2")
-//		testCompileOnly("com.google.code.findbugs:jsr305:3.0.2")
+		testCompileOnly("com.google.code.findbugs:jsr305:3.0.2")
 	}
 
 	//org.springframework.beans.factory.xml中的XmlBeanFactory已过时，这个好像没怎么有效，可以先注释掉;
@@ -267,6 +267,10 @@ configure(subprojects - project(":spring-build-src")) { subproject ->
 		archives sourcesJar
 		//archives javadocJar
 	}
+
+	tasks.withType(JavaCompile) {
+		options.encoding = "UTF-8"
+	}
 }
 
 configure(rootProject) {
@@ -285,24 +289,24 @@ configure(rootProject) {
 	// Don't publish the default jar for the root project
 	configurations.archives.artifacts.clear()
 
-//	dependencies {  // for integration tests
-//		testCompile(project(":spring-aop"))
-//		testCompile(project(":spring-beans"))
-//		testCompile(project(":spring-context"))
-//		testCompile(project(":spring-core"))
-//		testCompile(project(":spring-expression"))
-//		testCompile(project(":spring-jdbc"))
-//		testCompile(project(":spring-orm"))
-//		testCompile(project(":spring-test"))
-//		testCompile(project(":spring-tx"))
-//		testCompile(project(":spring-web"))
-//		testCompile("javax.inject:javax.inject:1")
-//		testCompile("javax.resource:javax.resource-api:1.7")
-//		testCompile("javax.servlet:javax.servlet-api:3.1.0")
-//		testCompile("org.aspectj:aspectjweaver:${aspectjVersion}")
-//		testCompile("org.hsqldb:hsqldb:${hsqldbVersion}")
-//		testCompile("org.hibernate:hibernate-core:5.1.17.Final")
-//	}
+	dependencies {  // for integration tests
+		testCompile(project(":spring-aop"))
+		testCompile(project(":spring-beans"))
+		testCompile(project(":spring-context"))
+		testCompile(project(":spring-core"))
+		testCompile(project(":spring-expression"))
+		testCompile(project(":spring-jdbc"))
+		testCompile(project(":spring-orm"))
+		testCompile(project(":spring-test"))
+		testCompile(project(":spring-tx"))
+		testCompile(project(":spring-web"))
+		testCompile("javax.inject:javax.inject:1")
+		testCompile("javax.resource:javax.resource-api:1.7")
+		testCompile("javax.servlet:javax.servlet-api:3.1.0")
+		testCompile("org.aspectj:aspectjweaver:${aspectjVersion}")
+		testCompile("org.hsqldb:hsqldb:${hsqldbVersion}")
+		testCompile("org.hibernate:hibernate-core:5.1.17.Final")
+	}
 
 	artifacts {
 		//archives docsZip
@@ -343,3 +347,4 @@ def qualifyVersionIfNecessary(version) {
 	}
 	return version
 }
+

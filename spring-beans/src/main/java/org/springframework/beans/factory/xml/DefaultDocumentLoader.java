@@ -64,6 +64,8 @@ public class DefaultDocumentLoader implements DocumentLoader {
 	/**
 	 * Load the {@link Document} at the supplied {@link InputSource} using the standard JAXP-configured
 	 * XML parser.
+	 * 	 * 对XML文件的解析，主要是依靠JAXP (Java API for XMLProcessing) 实现的。同样来个链接：JAXP。
+	 * 	 * 参考 https://blog.csdn.net/redarmy_chen/article/details/12912065
 	 */
 	@Override
 	public Document loadDocument(InputSource inputSource, EntityResolver entityResolver,
@@ -84,6 +86,9 @@ public class DefaultDocumentLoader implements DocumentLoader {
 	 * @param namespaceAware whether the returned factory is to provide support for XML namespaces
 	 * @return the JAXP DocumentBuilderFactory
 	 * @throws ParserConfigurationException if we failed to build a proper DocumentBuilderFactory
+	 *
+	 * 对XML文件的解析，主要是依靠JAXP (Java API for XMLProcessing) 实现的。同样来个链接：JAXP。
+	 * 参考 https://blog.csdn.net/redarmy_chen/article/details/12912065
 	 */
 	protected DocumentBuilderFactory createDocumentBuilderFactory(int validationMode, boolean namespaceAware)
 			throws ParserConfigurationException {

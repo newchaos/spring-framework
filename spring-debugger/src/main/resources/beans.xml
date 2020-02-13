@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
+<beans profile="default" xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
 	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
-	
-	<bean id = "debugBean" class = "com.athm.DebugSpringBean"></bean>
-	
+	<bean id = "debugBean" name="debugBean"  class = "com.athm.DebugSpringBean"></bean>
+	<alias name="debugBean" alias="debugBeanAlias"></alias>
+	<bean id = "debugBean2" class = "com.athm.DebugSpringBean"></bean>
+	<alias name="debugBean2" alias="debugBeanAlias2"></alias>
+	<bean id = "debugBean3" class = "com.athm.DebugSpringBean"></bean>
 </beans>

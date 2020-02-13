@@ -89,24 +89,33 @@ public class XmlValidationModeDetector {
 	 */
 	public int detectValidationMode(InputStream inputStream) throws IOException {
 		// Peek into the file to look for DOCTYPE.
+		//创建一个buffer的字符缓冲流
+		// Peek into the file to look for DOCTYPE.
 		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 		try {
+			//判断是否为DTD验证模式,默认为XSD模式
 			boolean isDtdValidated = false;
 			String content;
+			//一行一行的读取
 			while ((content = reader.readLine()) != null) {
+				//该方法主要的作用是判断当前解析的行是否在注释内
 				content = consumeCommentTokens(content);
+				//如果当前读取的是空行或者是注释直接跳过
 				if (this.inComment || !StringUtils.hasText(content)) {
 					continue;
 				}
+				//表明是DTD模式
 				if (hasDoctype(content)) {
 					isDtdValidated = true;
 					break;
 				}
+				//这里表明读取的内容必须以<开始作为标记,那么验证模式在它之前
 				if (hasOpeningTag(content)) {
 					// End of meaningful data...
 					break;
 				}
 			}
+			//这里看isDtdValidated的值了,默认是VALIDATION_DTD,反之VALIDATION_XSD
 			return (isDtdValidated ? VALIDATION_DTD : VALIDATION_XSD);
 		}
 		catch (CharConversionException ex) {
@@ -115,6 +124,7 @@ public class XmlValidationModeDetector {
 			return VALIDATION_AUTO;
 		}
 		finally {
+			//关闭缓冲输入流
 			reader.close();
 		}
 	}
@@ -153,6 +163,8 @@ public class XmlValidationModeDetector {
 			return line;
 		}
 		String currLine = line;
+		/**如果当前的行不是以<!--开头,且不是以-->结尾结束*/
+		//即当前读取的行不在注释内
 		while ((currLine = consume(currLine)) != null) {
 			if (!this.inComment && !currLine.trim().startsWith(START_COMMENT)) {
 				return currLine;

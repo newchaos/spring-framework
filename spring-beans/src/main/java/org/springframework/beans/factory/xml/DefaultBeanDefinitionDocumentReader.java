@@ -131,15 +131,16 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 		// this behavior emulates a stack of delegates without actually necessitating one.
 
 		// 真正的解析还是交给了delegete实现;
-		// 重新创建delegete;使用之前给的readercontext；
+		// 重新创建delegete;使用之前给的readercontext；委托模式；
 		BeanDefinitionParserDelegate parent = this.delegate;
 		this.delegate = createDelegate(getReaderContext(), root, parent);
 
 		if (this.delegate.isDefaultNamespace(root)) {
 			// 处理profile的配置文件问题;看要解析哪个环境的配置;
+			// 类似于这种<beans profile="dev">.......</beans>可以配置好几种;
 			String profileSpec = root.getAttribute(PROFILE_ATTRIBUTE);
 			if (StringUtils.hasText(profileSpec)) {
-				// profile环境可以同时指定多个;
+				// profile环境可以同时指定多个;可以同时指定多套环境;
 				String[] specifiedProfiles = StringUtils.tokenizeToStringArray(
 						profileSpec, BeanDefinitionParserDelegate.MULTI_VALUE_ATTRIBUTE_DELIMITERS);
 				if (!getReaderContext().getEnvironment().acceptsProfiles(specifiedProfiles)) {
@@ -154,6 +155,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 
 		// DefaultBeanDefinitionDocumentReader采用面向继承设计;因为没有使用final修饰;
 		// 下面两个方法是为子类而设计的,即模板方法设计模式的原理;
+		// 委托模式；
 		preProcessXml(root);
 		parseBeanDefinitions(root, this.delegate);
 		postProcessXml(root);
@@ -345,9 +347,16 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 		// 先从document中封装beandefinition持有者;bean持有者有bean定义,bean名称,bean别名;
 		BeanDefinitionHolder bdHolder = delegate.parseBeanDefinitionElement(ele);
 		if (bdHolder != null) {
+			/* 以下代码作用于类似bean的自定义属性;
+			<bean id="test" class="test.User">
+				<mybean:user username="zhangsan"/>
+			</bean>
+			然后自定义的标签都是用自定义namespace的解析器处理的;
+			 */
 			// 如果默认的标签下面 有自定义的属性,则再解析自定义属性;
 			bdHolder = delegate.decorateBeanDefinitionIfRequired(ele, bdHolder);
 			try {
+
 				// Register the final decorated instance.
 				BeanDefinitionReaderUtils.registerBeanDefinition(bdHolder, getReaderContext().getRegistry());
 			}

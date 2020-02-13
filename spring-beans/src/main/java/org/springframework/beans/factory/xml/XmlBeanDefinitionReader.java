@@ -364,9 +364,11 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 					"Detected cyclic loading of " + encodedResource + " - check your import definitions!");
 		}
 		try {
+			// spring的自带resource资源体系成员;xml文件是通过classload加载的;
 			InputStream inputStream = encodedResource.getResource().getInputStream();
 			try {
-				// 转换为sax解析dom的工具进行dom解析;
+				// 转换为sax解析dom的工具进行dom解析;sax这里为jdk自带的类;我们自己的xml都可以尝试用这种方法来解析;
+				// 我们在自己解析xml或者dtd时,我们可以使用这种spring的方式来处理，转换成spring的resource,然后再利用它各种方法,应该能满足常用功能;
 				InputSource inputSource = new InputSource(inputStream);
 				if (encodedResource.getEncoding() != null) {
 					inputSource.setEncoding(encodedResource.getEncoding());
@@ -432,7 +434,11 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	protected int doLoadBeanDefinitions(InputSource inputSource, Resource resource)
 			throws BeanDefinitionStoreException {
 		try {
+			// 依靠JAXP (Java API for XMLProcessing) 将xml配置文件成功解析成document对象;
+			// 第一步还只是把xml的内容封装成了document对象,既没有到解析xml的阶段，更没到实例化bean的阶段;
 			Document doc = doLoadDocument(inputSource, resource);
+			// 第二步,把docment对象根据schema来解析xml把里面所有的bean全部封装成BeanDefinition对象;
+			// 在xml中一个完整的bean标签,解析完成之后对应的对象就是BeanDefinition;bean标签的所有元素和属性在该对象中都有相关定义;
 			return registerBeanDefinitions(doc, resource);
 		}
 		catch (BeanDefinitionStoreException ex) {
@@ -470,8 +476,23 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * @see DocumentLoader#loadDocument
 	 *
 	 *
-	 * getEntityResolver() 默认是通过网络来请求约束文件,但是会比较慢，所以这里采取了手动从本地获取;
+	 * getEntityResolver() 实际是ResourceEntityResolver；指的是xml配置文件的约束scheme的封装；这里主要作用是不去网络请求，直接本地加载;
+	 * 资源实例解析器;默认是通过网络来请求约束文件,但是会比较慢，所以这里采取了手动从本地获取;
+	 * EntityResolver entityResolver 参数是从 XmlBeanDefinitionReader 中传过来的，它是其中的一个属性，通过setter和getter方法可以设置与获取。
+	 * 和 InputSource 一样，EntityResolver 也是属于 org.xml.sax 包下的。SAX程序想要实现自定义处理外部实体必须实现 EntityResolver 接口并使用 setEntityResolver 方法向SAX驱动器注册一个实例。
+	 * 也就是说，对于解析一个XML，SAX首先读取该XML文档上的声明，根据声明寻找相应的DTD定义，以便对文档进行验证。它默认寻找规则是通过声明的DTD的URI地址去网络下载DTD。
+	 * 这样可能引来一些问题，比如下载较慢，没有网络等。利用 EntityResolver 则可以通过读取本地DTD文件返回给SAX的方式来解决这一问题。
+	 * 总结起来，EntityResolver 能够帮助我们通过程序来实现从本地自定义目录寻找dtd或者xsd验证文件而无需下载。
+	 * EntityResolver 本身是一个接口，内部定义了一个 resolveEntity 方法，接收两个参数 publicId和 systemId，返回 inputSource 对象。
+	 * systemId 可以通过META-INF/Spring.schemas获取到对应的约束文件;
+	 * 但是这里只是解析成xml,还没有真正开始用xsd约束；
+	 *
 	 * getValidationModeForResource(resource) 获取应该校验的模式,到底是dtd还是xsd的格式;
+	 * isNamespaceAware 这是一个谜，没有弄太明白;
+	 *
+	 *
+	 *
+	 *
 	 */
 	protected Document doLoadDocument(InputSource inputSource, Resource resource) throws Exception {
 		return this.documentLoader.loadDocument(inputSource, getEntityResolver(), this.errorHandler,
@@ -491,14 +512,20 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 *
 	 */
 	protected int getValidationModeForResource(Resource resource) {
+		//获取验证模式
 		int validationModeToUse = getValidationMode();
+		// //若果是手动指定了验证模式,则使用指定的验证模式即可
+		// 这里的VALIDATION_AUTO模式只是一个初始化状态，应该没啥用，只是为了不初始化为0;
+		// 因为我随便传一个文件进去如properties,后面的探测会先判断,只要如果不是dtd,那就是xsd,只有两种情况;
 		if (validationModeToUse != VALIDATION_AUTO) {
 			return validationModeToUse;
 		}
+		//如果未指定就使用自动检测验证模式
 		int detectedMode = detectValidationMode(resource);
 		if (detectedMode != VALIDATION_AUTO) {
 			return detectedMode;
 		}
+		//如果都不是,就假定是XSD的文档验证模式
 		// Hmm, we didn't get a clear indication... Let's assume XSD,
 		// since apparently no DTD declaration has been found up until
 		// detection stopped (before finding the document's root tag).
@@ -523,6 +550,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 
 		InputStream inputStream;
 		try {
+			//这里调用了classPathResource#getInputStream方法获取输入流
 			inputStream = resource.getInputStream();
 		}
 		catch (IOException ex) {
@@ -559,6 +587,9 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 		BeanDefinitionDocumentReader documentReader = createBeanDefinitionDocumentReader();
 		int countBefore = getRegistry().getBeanDefinitionCount();
 		// createReaderContext 方法里面初始化了defaultnamespacehandler,为后面的解析自定义的namespace提供了方便;
+		// 专门的document阅读器来注册beandefintions;需要一个参数readcontext：XmlReaderContext
+		// XmlReaderContext里面有几个主要属性：XmlBeanDefinitionReader，BeanDefinitionRegistry，和Environment
+		// 带着文档阅读器和reader的上下文去进行注册;
 		documentReader.registerBeanDefinitions(doc, createReaderContext(resource));
 		return getRegistry().getBeanDefinitionCount() - countBefore;
 	}
