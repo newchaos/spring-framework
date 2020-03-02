@@ -234,6 +234,20 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * not for actual use
 	 * @return an instance of the bean
 	 * @throws BeansException if the bean could not be created
+	 *
+	 *
+	 * 该方法步骤 :
+	 * 1、转换&前缀的bean的name;
+	 * 2、从缓存中获取单例的bean或者ObjectFactory;然后获取到真正的bean;
+	 * 3、如果缓存没有，做另一条分支:创建;
+	 * 4、创建分支:
+	 * 4.1、原型模式的循环依赖检查;
+	 * 4.2、检测parentBeanFactory;
+	 * 4.3、因为后续所有的处理都是针对于RootBeanDefinition;所以把GerenricBeanDefinitionz转为RootBeanDefinition类型;
+	 * 4.4、寻找依赖;
+	 * 4.5、针对不同的scope进行bean的创建;
+	 * 5、类型转换;
+	 *
 	 */
 	@SuppressWarnings("unchecked")
 	protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredType,
@@ -246,12 +260,16 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 		// Eagerly check singleton cache for manually registered singletons.
 		/**
-		 * 检查缓存中或者实例工厂中是否有对应的实例; 避免循环依赖
+		 * 检查缓存中或者实例工厂中是否有对应的实例;
+		 * 创建单例bean的时候会存在依赖注入的情况，而避免循环依赖
 		 * spring创建bean的原则是不等bean创建完成就会将创建bean的ObjectFactory提早曝光;
 		 * 也就是将ObjectFactory加入到缓存中,一旦下个bean创建时候需要依赖上个bean则直接使用;
 		 */
 
+		// 先处理factorybean的情况;
+		// 先从缓存中加载单例模式的实例;
 		// 直接尝试从缓存中获取或者singletonFactory中的ObjectFactory中获取;
+		// 先检测循环依赖的问题;
 		Object sharedInstance = getSingleton(beanName);
 		if (sharedInstance != null && args == null) {
 			if (logger.isDebugEnabled()) {
@@ -272,6 +290,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		else {
 			/**
 			 * 只有单例共享情况下才会尝试解决循环依赖,原型模式情况下，如果存在循环依赖则会报错;
+			 * 只有单例的循环依赖才能解决,原型的循环依赖没法解决;只能抛异常;
 			 */
 			// Fail if we're already creating this bean instance:
 			// We're assumably within a circular reference.

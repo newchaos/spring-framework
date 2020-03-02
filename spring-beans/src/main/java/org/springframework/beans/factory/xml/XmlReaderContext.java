@@ -118,6 +118,8 @@ public class XmlReaderContext extends ReaderContext {
 	/**
 	 * Return the namespace resolver.
 	 * @see XmlBeanDefinitionReader#setNamespaceHandlerResolver
+	 * 在解析xml文件交给documentReader时后创建xmlReaderContext的时候,给其初始化赋值的;
+	 * 是直接new的DefaultNamespaceHandlerResolver
 	 */
 	public final NamespaceHandlerResolver getNamespaceHandlerResolver() {
 		return this.namespaceHandlerResolver;

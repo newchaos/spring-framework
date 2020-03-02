@@ -451,6 +451,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * Central method of this class: creates a bean instance,
 	 * populates the bean instance, applies post-processors, etc.
 	 * @see #doCreateBean
+	 *
+	 *
+	 *
+	 *
 	 */
 	@Override
 	protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args)
@@ -474,6 +478,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Prepare method overrides.
 		try {
 			// 验证和准备覆盖的方法;
+			// lookup-method标签和replace-method标签;
 			mbdToUse.prepareMethodOverrides();
 		}
 		catch (BeanDefinitionValidationException ex) {
@@ -483,9 +488,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
-			// 给BeanPostProcessors一个机会来反向代理替代真正的实例;
+			// 给BeanPostProcessors一个机会来反向代理替代真正的实例;比如想通过其他方式把配置的bean给换掉;
 			// 应用初始化前的后处理器;解析指定的bean是否存在初始化前的短路操作;即先有创建;
 			// Aop的逻辑处理就是这里处理的;因为这里的 短路操作;
+			// 如果有前置处理器可能会先把对象给实例化了;这里有一个前置的切面方法;
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			// 短路判断;
 			if (bean != null) {
@@ -528,10 +534,32 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * @see #instantiateBean
 	 * @see #instantiateUsingFactoryMethod
 	 * @see #autowireConstructor
+	 * 此方法主要两部分功能:
+	 * 1、实例化;
+	 * 2、构造属性;
+	 * 细化步骤:
+	 * 1、首先单例需要清除缓存;
+	 * 2、实例化bean,将BeanDefinition转换成BeanWrapper
+	 * 3、MergeBeanDefinitionPostProcessor的应用;
+	 * 4、依赖处理;
+	 * 5、属性填充;
+	 * 6、循环依赖检查;
+	 * 7、注册DispoableBean 销毁bean;
+	 * 8、创建并返回;
+	 *
 	 */
 	protected Object doCreateBean(final String beanName, final RootBeanDefinition mbd, final @Nullable Object[] args)
 			throws BeanCreationException {
 
+		/*
+		BeanWrapper还有两个顶级类接口，分别是PropertyAccessor和PropertyEditorRegistry。
+		PropertyAccessor接口定义了各种访问Bean属性的方法，如setPropertyValue(String,Object)、setPropertyValues(PropertyValues pvs)等；而PropertyEditorRegistry是属性编辑器的注册表。
+		所以BeanWrapper实现类BeanWrapperImpl具有三重身份：
+		Bean包裹器；
+		属性访问器；
+		属性编辑器注册表。
+		一个BeanWrapperImpl实例内部封装了两类组件：被封装的待处理的Bean，以及一套用于设置Bean属性的属性编辑器。
+		 */
 		// Instantiate the bean.
 		BeanWrapper instanceWrapper = null;
 		if (mbd.isSingleton()) {
@@ -568,6 +596,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// 只有单例才能解决循环依赖,原型模型只能抛异常;
 		// isSingletonCurrentlyInCreation 这个在getsingleton函数中会有设置;是否在创建中;
 		// allowCircularReferences 是否允许循环依赖，这个在AbstractRefreshableApplicationContext中有这个设置方法;
+
+		// 在属性装配之前加上循环依赖检测;而不是之后;这个时机挺有意思;
 		boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
 				isSingletonCurrentlyInCreation(beanName));
 		if (earlySingletonExposure) {
@@ -1129,7 +1159,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			return obtainFromSupplier(instanceSupplier, beanName);
 		}
 
-		// 工厂方法创建bean;
+		// 工厂方法创建bean;是否存在factory-method属性;
 		if (mbd.getFactoryMethodName() != null) {
 			return instantiateUsingFactoryMethod(beanName, mbd, args);
 		}

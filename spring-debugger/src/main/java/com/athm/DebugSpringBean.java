@@ -1,5 +1,8 @@
 package com.athm;
 
+import com.athm.custom.User;
+import com.athm.factorybean.Car;
+import com.athm.factorybean.CarFactoryBean;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
@@ -28,14 +31,16 @@ import org.springframework.core.io.ClassPathResource;
  */
 public class DebugSpringBean{
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		//args[0]="spring.profiles.active=dev";
 
 		System.out.println("");
 		System.out.println("this is springdubugger starting.........");
 		System.out.println("");
 
-		debugSpringBeans();
+		//debugSpringBeans();
+		//debugCustomElement();
+		debugFactoryBean();
 
 		System.out.println("");
 		System.out.println("this is springdubugger end.........");
@@ -52,6 +57,26 @@ public class DebugSpringBean{
 		// 只要容器已经有了的bean，就可以通过这种方式把它给拿到;
 		//XmlBeanDefinitionReader reader = beanFactory.getBean(XmlBeanDefinitionReader.class);
 		//((StandardEnvironment)reader.getEnvironment()).setActiveProfiles("dev");
-		System.out.println(beanFactory.getBean("debugBean"));
+		//System.out.println(beanFactory.getBean("debugBean"));
+		beanFactory.getBean("debugBeanAlias2");
+		System.out.println(beanFactory.getBean("debugBeanAlias2"));
+	}
+
+	public static void debugCustomElement() {
+		BeanFactory beanFactory = new XmlBeanFactory(new ClassPathResource("beans.xml"),null);
+		beanFactory.getBean("testbean");
+		System.out.println(((User)beanFactory.getBean("testbean")).getUserName());
+	}
+
+	public static void debugFactoryBean() throws Exception {
+		BeanFactory beanFactory = new XmlBeanFactory(new ClassPathResource("beans.xml"),null);
+		beanFactory.getBean("&car");
+		beanFactory.getBean("&car");
+		beanFactory.getBean("&car");
+		beanFactory.getBean("car2");
+		beanFactory.getBean("car2");
+		beanFactory.getBean("car2");
+		System.out.println((((CarFactoryBean)beanFactory.getBean("&car"))).getObject().toString());
+		System.out.println(((Car)beanFactory.getBean("car2")).getBrand());
 	}
 }

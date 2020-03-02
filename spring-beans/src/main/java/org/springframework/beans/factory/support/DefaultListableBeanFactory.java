@@ -798,9 +798,10 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 		}
 
-		// 因为beandefinintionmap是全局变量,这里会存在并发访问的情况;
+
 		BeanDefinition existingDefinition = this.beanDefinitionMap.get(beanName);
 		// 处理已经注册的beanName情况;
+		// 如果bean已经存在，做一些基本的校验;
 		if (existingDefinition != null) {
 			// 如果注册已经注册的且在配置中配置了bean不允许被覆盖,则抛出异常;
 			if (!isAllowBeanDefinitionOverriding()) {
@@ -808,6 +809,10 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 						"Cannot register bean definition [" + beanDefinition + "] for bean '" + beanName +
 						"': There is already [" + existingDefinition + "] bound.");
 			}
+			// 表示BeanDefinition是应用程序主要部分的角色提示。 通常对应于用户定义的bean。
+			// ROLE_SUPPORT =1实际上就是说，我这个Bean是用户的，是从配置文件中过来的。
+			// ROLE_INFRASTRUCTURE = 2就是我这Bean是Spring自己的，和你用户没有一毛钱关系。
+			// 上面是BeanDifinition的一些基本属性信息，一个就是标识下当前Bean的作用域，另外就是标识一下这个Bean是内部的还是外部的。下面来看这个接口为其子类都提供了哪些具体的行为方法：
 			else if (existingDefinition.getRole() < beanDefinition.getRole()) {
 				// e.g. was ROLE_APPLICATION, now overriding with ROLE_SUPPORT or ROLE_INFRASTRUCTURE
 				if (logger.isWarnEnabled()) {
@@ -834,6 +839,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		}
 		else {
 			if (hasBeanCreationStarted()) {
+				// 因为beandefinintionmap是全局变量,这里会存在并发访问的情况;
 				// Cannot modify startup-time collection elements anymore (for stable iteration)
 				synchronized (this.beanDefinitionMap) {
 					this.beanDefinitionMap.put(beanName, beanDefinition);

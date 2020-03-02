@@ -153,6 +153,8 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 			}
 		}
 
+		// 实现方法如上:https://blog.csdn.net/u013632755/article/details/71512501
+		// 继承默认的documentreader后再把beandefintionreader的setDocumentReaderClass设置为继承类;
 		// DefaultBeanDefinitionDocumentReader采用面向继承设计;因为没有使用final修饰;
 		// 下面两个方法是为子类而设计的,即模板方法设计模式的原理;
 		// 委托模式；

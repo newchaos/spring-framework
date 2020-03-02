@@ -162,7 +162,7 @@ class ConstructorResolver {
 				ConstructorArgumentValues cargs = mbd.getConstructorArgumentValues();
 				// 用于承载解析后的构造函数的值
 				resolvedValues = new ConstructorArgumentValues();
-				// 能解析到的参数个数;
+				// 能解析到的参数个数;从配置文件中解析构造函数参数;
 				minNrOfArgs = resolveConstructorArguments(beanName, mbd, bw, cargs, resolvedValues);
 			}
 
@@ -181,7 +181,7 @@ class ConstructorResolver {
 				}
 			}
 
-			// 排序给定的构造函数,public 构造函数优先参数数量降序，非public构造函数参数数量降序
+			// 排序给定的构造函数,public 构造函数优先参数数量降序，非public构造函数参数数量降序,通过排序 进行比较，提高效率
 			AutowireUtils.sortConstructors(candidates);
 			int minTypeDiffWeight = Integer.MAX_VALUE;
 			Set<Constructor<?>> ambiguousConstructors = null;
