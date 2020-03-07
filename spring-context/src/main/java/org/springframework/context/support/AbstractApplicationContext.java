@@ -513,22 +513,34 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		return this.applicationListeners;
 	}
 
+
+	/**
+	 * 步骤:
+	 * 1、环境验证; 这里可以自定义用户进行扩展;
+	 * 2、初始化BeanFactory并对xml进行读取;
+	 * 3、applicationContext对BeanFactory进行功能扩展;比如支持EL,支持各种postprocessor,支持aop等;
+	 * @throws BeansException
+	 * @throws IllegalStateException
+	 */
 	@Override
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
 			// Prepare this context for refreshing.
-			//  在启动的时候对必须的变量如系统属性或者环境变量做存在性的验证
+			//  在启动的时候对必须的变量如系统属性或者环境变量做存在性的验证;
+			// 准备刷新上下文;
 			prepareRefresh();
 
 			// 初始化BeanFactory,并进行XML文件读取;
 			// 这一步之后ClassPathXmlApplicationContext包含了BeanFactory所提供的一切特征和功能；
 			// 并且在BeanFactory基础之上做了大量的扩展;
 			// Tell the subclass to refresh the internal bean factory.
+			// 初始化BeanFactory,并进行XML文件读取;
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// 对BeanFactory进行各种功能填充;@Quailfier和@Autowired就是这一步骤中增加的支持;
 			// 前面是通过配置解析获取beanfactory;之后从这个函数就开始对ApplicationContext进行功能扩展了;
 			// Prepare the bean factory for use in this context.
+			// 对BeanFactory进行各种功能填充;扩展成ApplicationContext,高于BeanFactory,但基于BeanFactory;
 			prepareBeanFactory(beanFactory);
 
 			try {
@@ -540,8 +552,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// Spring的ioc容器允许BeanFactoryPostProcessor在容器实际实例化任何其他的bean之前读取元数据;
 				// 并且可以修改它;如果你愿意，你也可以配置多个BeanFactoryPostProcessor,还可以通过order属性来控制BeanFactoryPostProcessor的执行顺序;;
 				// 如果你想改变实际的bean实例;那么最好使用BeanPostProcessor;当然，BeanFactoryPostProcessor是容器级别的；对使用的容器有效;
-				// 最典型的使用就是 PropertyPlaceHolderConfigurer;然后就是敏感词的替换；
-				// 通过
+				// 最典型的使用就是 PropertyPlaceHolderConfigurer;然后就是敏感词的替换；原理是,在封装对象结束后,会去看下有没有后处理器,而这个后处理器就在干处理占位的这种事情;
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
@@ -725,9 +736,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		// 在bean实例化的过程中,也就是spring激活bean的init-method的前后,
 		// 会调用BeanPostProcessor的postProcessBeforeInitialization方法和postProcessAfterInitialization方法;
 		// 对于子类ApplicationContextAwareProcessor也是一样;
+		/// 这个处理器就是为了解决各种Aware的资源的对照;
 		beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
 
-		// 设置忽略依赖；设置了几个忽略自动装配的接口;
+		// 设置忽略依赖；设置了几个忽略自动装配的接口;处理上面的aware;
 		// 因为被上面的调用了，所以不是普通的bean，所以不要再去做依赖注入处理了;
 		beanFactory.ignoreDependencyInterface(EnvironmentAware.class);
 		beanFactory.ignoreDependencyInterface(EmbeddedValueResolverAware.class);
@@ -736,6 +748,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		beanFactory.ignoreDependencyInterface(MessageSourceAware.class);
 		beanFactory.ignoreDependencyInterface(ApplicationContextAware.class);
 
+		// 指定这些类型只能是指定的bean赋值;
 		// 设置注册依赖；设置了几个自动装配的特殊规则; 指定注入的时候用什么注入依赖;
 		// BeanFactory interface not registered as resolvable type in a plain factory.
 		// MessageSource registered (and found for autowiring) as a bean.

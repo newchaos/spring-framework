@@ -40,8 +40,8 @@ public class DebugSpringBean{
 
 		//debugSpringBeans();
 		//debugCustomElement();
-		debugFactoryBean();
-
+		//debugFactoryBean();
+		debugApplicationContext();
 		System.out.println("");
 		System.out.println("this is springdubugger end.........");
 		System.out.println("");
@@ -78,5 +78,10 @@ public class DebugSpringBean{
 		beanFactory.getBean("car2");
 		System.out.println((((CarFactoryBean)beanFactory.getBean("&car"))).getObject().toString());
 		System.out.println(((Car)beanFactory.getBean("car2")).getBrand());
+	}
+
+	public static void debugApplicationContext() throws Exception {
+		ApplicationContext ctx = new ClassPathXmlApplicationContext("beans.xml");
+		System.out.println((Car)ctx.getBean("car3"));
 	}
 }

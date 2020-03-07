@@ -4,6 +4,15 @@ public class Car {
 	private int maxSpeed;
 	private String brand;
 	private double price;
+	private String strMessage;
+
+	public String getStrMessage() {
+		return strMessage;
+	}
+
+	public void setStrMessage(String strMessage) {
+		this.strMessage = strMessage;
+	}
 
 	public int getMaxSpeed() {
 		return maxSpeed;
@@ -35,6 +44,7 @@ public class Car {
 				"maxSpeed=" + maxSpeed +
 				", brand='" + brand + '\'' +
 				", price=" + price +
+				", strMessage='" + strMessage + '\'' +
 				'}';
 	}
 }

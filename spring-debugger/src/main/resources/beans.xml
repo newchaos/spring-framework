@@ -17,4 +17,18 @@
 	</bean>
 
 	<bean id="car2" class="com.athm.factorybean.CarFactoryBean"></bean>
+
+	<bean id="car3" class="com.athm.factorybean.Car">
+		<property name="strMessage">
+			<value>${car.message}</value>
+		</property>
+	</bean>
+
+	<bean id="mesHandler" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>property.properties</value>
+			</list>
+		</property>
+	</bean>
 </beans>
