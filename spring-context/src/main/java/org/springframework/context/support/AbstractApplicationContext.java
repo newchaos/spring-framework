@@ -38,6 +38,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.beans.support.ResourceEditorRegistrar;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -556,9 +557,13 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
-				// 激活各种BeanFactory处理器;
+				// 激活各种BeanFactory处理器; 主要是以下两种类型;
+				// BeanDefinitionRegistryPostProcessor
+				// BeanFactoryPostProcessor
 				invokeBeanFactoryPostProcessors(beanFactory);
 
+
+				// 上面谈到的是beanfactory；这里再来说说bean;这里只是注册,并不是调用,调用是在getBean的时候实现的;
 				// Register bean processors that intercept bean creation.
 				// 注册拦截Bean创建的bean处理器;这里只是注册;真正的调用是在getBean时候即实例化的阶段;所以这也是很多功能BeanFactory不支持的原因;
 				// spring中大部分功能都是通过后处理器的方式进行扩展的；这是spring框架的一个特性，但是在beanFactory中其实并没有实现后处理器的自动注册；
@@ -583,6 +588,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// 初始化应用消息广播器;将放入ApplicationEventMulticaster的bean中;
 				// 广播器Multicaster主要是用来注册监听器的;
 				// 而事件的发布是需要publish来做的;
+				// 这里就是告诉监听器,你们起来干活了,事件来了;
 				// Initialize event multicaster for this context.
 				initApplicationEventMulticaster();
 
@@ -600,6 +606,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// 初始化非延迟加载单例;
 				// ConversionService;
 				// 完成BeanFactory的初始化工作，其中包括ConversionService的设置，配置冻结以及非延迟加载的bean的初始化工作;
+				// ConversionService是类型转换的核心接口，而ConversionServiceFactoryBean提供了一个创建ConversionService的工厂
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
@@ -797,7 +804,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * <p>Must be called before singleton instantiation.
 	 */
 	protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
-		PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
+ 		PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
 
 		// Detect a LoadTimeWeaver and prepare for weaving, if found in the meantime
 		// (e.g. through an @Bean method registered by ConfigurationClassPostProcessor)
@@ -976,9 +983,11 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		// Stop using the temporary ClassLoader for type matching.
 		beanFactory.setTempClassLoader(null);
 
+		// 冻结所有的bean定义,说明注册的bean定义将不呗修改或任何进一步的处理;
 		// Allow for caching all bean definition metadata, not expecting further changes.
 		beanFactory.freezeConfiguration();
 
+		// 初始化剩下的单实例;(非惰性的),提前getBean;而不是等待getBean的时候去做;
 		// Instantiate all remaining (non-lazy-init) singletons.
 		beanFactory.preInstantiateSingletons();
 	}

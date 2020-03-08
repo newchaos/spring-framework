@@ -62,7 +62,12 @@ final class PostProcessorRegistrationDelegate {
 	 * regularPostProcessors  硬编码注册的BeanFactoryPostProcessor，
 	 * registryProcessors   硬编码方式注册的 BeanDefinitionRegistryPostProcessor；
 	 *
-	 * 先调用BeanDefinitionRegistryPostProcessors，再调用BeanFactoryPostProcessor；
+	 * BeanDeifinitonRegistryPostProcessor是BeanFactoryPostProcessor的子类，有一些自定义的功能;所以
+	 * 先调用BeanDefinitionRegistryPostProcessors，再调用BeanFactoryPostProcessor;
+	 * 才能调用到新的功能;
+	 *
+	 *
+	 * registryPostProcessorBeans 记录通过硬编码注册的BeanDeifinitonRegistryPostProcessor类型的处理器;
 	 *
 	 * 对于硬编码方式是不需要排序的;在配置文件中读取的处理器,spring并不保证读取的顺序；所以通过PriorityOrdered或者Ordered来控制;
 	 *
@@ -80,7 +85,7 @@ final class PostProcessorRegistrationDelegate {
 			List<BeanFactoryPostProcessor> regularPostProcessors = new ArrayList<>();
 			List<BeanDefinitionRegistryPostProcessor> registryProcessors = new ArrayList<>();
 
-			// 硬编码注册的后处理器;
+			// 硬编码注册的后处理器beanFactoryPostProcessors这个集合里面的;;所谓的硬编码就是AbstractBeanFactory.addBeanFactoryPostProcessors功能实现的;
 			for (BeanFactoryPostProcessor postProcessor : beanFactoryPostProcessors) {
 				if (postProcessor instanceof BeanDefinitionRegistryPostProcessor) {
 					BeanDefinitionRegistryPostProcessor registryProcessor =
@@ -235,7 +240,6 @@ final class PostProcessorRegistrationDelegate {
 		// a bean is not eligible for getting processed by all BeanPostProcessors.
 		int beanProcessorTargetCount = beanFactory.getBeanPostProcessorCount() + 1 + postProcessorNames.length;
 		beanFactory.addBeanPostProcessor(new BeanPostProcessorChecker(beanFactory, beanProcessorTargetCount));
-
 
 		// Separate between BeanPostProcessors that implement PriorityOrdered,
 		// Ordered, and the rest.
