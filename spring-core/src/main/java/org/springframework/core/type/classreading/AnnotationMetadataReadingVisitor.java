@@ -91,7 +91,6 @@ public class AnnotationMetadataReadingVisitor extends ClassMetadataReadingVisito
 				className, this.attributesMap, this.metaAnnotationMap, this.classLoader);
 	}
 
-
 	@Override
 	public Set<String> getAnnotationTypes() {
 		return this.annotationSet;

@@ -550,13 +550,18 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// beanfactory作为spring中容器功能的基础,用于存放所有已经加载的bean;
 				// 为了保证可扩展性,spring针对beanfactory做了大量的扩展;
 				// 比如我们熟知的PostProcessor都是在这里实现的;
+
+				//spring中并没有具体去实现postProcessBeanFactory方法，是提供给想要实现BeanPostProcessor的三方框架使用的。
+				// 谁要使用谁就去实现。作用是在BeanFactory准备工作完成后做一些定制化的处理，一般结合BeanPostProcessor接口的实现类一起使用，注入一些重要资源（类似Application的属性和ServletContext的属性）。
+				// 最后需要设置忽略这类BeanPostProcessor子接口的自动装配。
+				// 这不是postprocessor,这只是纯碎的context的一个继承扩展;在上面对context做扩展后这里给用户继续扩展的空间;
+				postProcessBeanFactory(beanFactory);
+
+				// Invoke factory processors registered as beans in the context.
 				// Spring的ioc容器允许BeanFactoryPostProcessor在容器实际实例化任何其他的bean之前读取元数据;
 				// 并且可以修改它;如果你愿意，你也可以配置多个BeanFactoryPostProcessor,还可以通过order属性来控制BeanFactoryPostProcessor的执行顺序;;
 				// 如果你想改变实际的bean实例;那么最好使用BeanPostProcessor;当然，BeanFactoryPostProcessor是容器级别的；对使用的容器有效;
 				// 最典型的使用就是 PropertyPlaceHolderConfigurer;然后就是敏感词的替换；原理是,在封装对象结束后,会去看下有没有后处理器,而这个后处理器就在干处理占位的这种事情;
-				postProcessBeanFactory(beanFactory);
-
-				// Invoke factory processors registered as beans in the context.
 				// 激活各种BeanFactory处理器; 主要是以下两种类型;
 				// BeanDefinitionRegistryPostProcessor
 				// BeanFactoryPostProcessor
